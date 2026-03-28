@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShenSec Audit Report</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 2rem; color: #333; background: #f9f9f9; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        .summary { display: flex; justify-content: space-between; background: #ecf0f1; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; }
+        .summary div { text-align: center; }
+        .summary div strong { display: block; font-size: 1.2rem; }
+        .finding { border-left: 5px solid #bdc3c7; padding: 1rem; margin-bottom: 1rem; background: #fafafa; }
+        .severity-CRITICAL { border-left-color: #e74c3c; }
+        .severity-HIGH { border-left-color: #e67e22; }
+        .severity-MEDIUM { border-left-color: #f1c40f; }
+        .severity-LOW { border-left-color: #3498db; }
+        .severity-INFO { border-left-color: #2ecc71; }
+        .finding h3 { margin-top: 0; }
+        .badge { display: inline-block; padding: 0.25em 0.5em; font-size: 0.8em; font-weight: bold; border-radius: 3px; background: #e0e0e0; margin-left: 10px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ShenSec Security Audit Report</h1>
+        
+        <div class="summary">
+            <div><strong>Target URL</strong>{{ result.target_url }}</div>
+            <div><strong>Status Code</strong>{{ result.status_code }}</div>
+            <div><strong>Response Time</strong>{{ result.response_time_ms }} ms</div>
+            <div><strong>Risk Rating</strong><span class="badge" style="font-size: 1.2rem;">{{ result.risk_rating.value }}</span></div>
+            <div><strong>Total Issues</strong>{{ result.findings | length }}</div>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <h3>Severity Count</h3>
+            <ul>
+                <li>CRITICAL: {{ result.severity_counts.get("CRITICAL", 0) }}</li>
+                <li>HIGH: {{ result.severity_counts.get("HIGH", 0) }}</li>
+                <li>MEDIUM: {{ result.severity_counts.get("MEDIUM", 0) }}</li>
+                <li>LOW: {{ result.severity_counts.get("LOW", 0) }}</li>
+                <li>INFO: {{ result.severity_counts.get("INFO", 0) }}</li>
+            </ul>
+        </div>
+
+        <h2>Findings</h2>
+        {% if result.findings %}
+            {% for finding in result.findings %}
+            <div class="finding severity-{{ finding.severity.name }}">
+                <h3>{{ finding.title }} <span class="badge">{{ finding.severity.value }}</span></h3>
+                <p><strong>Rule ID:</strong> {{ finding.rule_id }}</p>
+                <p><strong>Description:</strong> {{ finding.description }}</p>
+                {% if finding.recommendation %}
+                <p><strong>Recommendation:</strong> <em>{{ finding.recommendation }}</em></p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No issues detected. Looking good!</p>
+        {% endif %}
+    </div>
+</body>
+</html>
