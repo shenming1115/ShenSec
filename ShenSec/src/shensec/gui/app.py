@@ -8,6 +8,12 @@ def run_gui(test_mode=False):
     if app is None:
         app = QApplication(sys.argv)
         
+    try:
+        import qdarktheme
+        qdarktheme.setup_theme("dark", corner_shape="rounded")
+    except ImportError:
+        pass # Better to fallback than crash if not installed
+
     window = MainWindow()
     if not test_mode:
         window.show()

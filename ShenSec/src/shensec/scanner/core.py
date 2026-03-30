@@ -1,81 +1,120 @@
+﻿import httpx
 import time
-from collections import Counter
-import httpx
+from typing import List, Optional
 from ..models import ScanResult, Finding, Severity
+
 from .headers import analyze_headers
 from .cookies import analyze_cookies
 
-def calculate_risk_rating(findings: list[Finding]) -> Severity:
-    counts = Counter(f.severity for f in findings)
-    for sev in [Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM, Severity.LOW]:
-        if counts.get(sev, 0) > 0:
-            return sev
-    return Severity.INFO
-
-def analyze_response(response: httpx.Response, url: str = None, response_time_ms: float = 0.0) -> ScanResult:
-    """Analyze an already fetched httpx.Response object."""
-    target_url = url or str(response.url)
+def analyze_tech_stack(response: httpx.Response) -> List[Finding]:
+    """Detect WAFs, CDNs, and Server Info leaks from Response."""
     findings = []
     
-    # 1. Inspect Headers
-    header_findings = analyze_headers(response)
-    findings.extend(header_findings)
+    server_header = response.headers.get("Server", "").lower()
+    x_powered_by = response.headers.get("X-Powered-By", "")
     
-    # 2. Inspect Cookies
-    cookie_findings = analyze_cookies(response)
-    findings.extend(cookie_findings)
-    
-    counts = {sev.value: 0 for sev in Severity}
-    for f in findings:
-        counts[f.severity.value] += 1
+    # 1. Tech Stack Leaks
+    if server_header:
+        findings.append(Finding(
+            rule_id="SEC-SRV-INFO", title="Server Version Disclosure",
+            description=f"Server header reveals: {server_header}",
+            severity=Severity.INFO if not any(c.isdigit() for c in server_header) else Severity.LOW,
+            recommendation="Configure your web server to hide specific software versions."
+        ))
         
-    risk_rating = calculate_risk_rating(findings)
-    
-    return ScanResult(
-        target_url=target_url,
-        status_code=response.status_code,
-        response_time_ms=response_time_ms,
-        findings=findings,
-        risk_rating=risk_rating,
-        severity_counts=counts
-    )
+    if x_powered_by:
+        findings.append(Finding(
+            rule_id="SEC-SRV-POWERED", title="Backend Framework Exposure (X-Powered-By)",
+            description=f"Identified framework: {x_powered_by}",
+            severity=Severity.LOW,
+            recommendation="Remove the X-Powered-By header to obscure the technology stack from attackers."
+        ))
 
-def scan_target(url: str, timeout: float = 10.0) -> ScanResult:
-    """Core function to orchestrate the scanning process on a given URL."""
-    try:
-        start_time = time.time()
-        # Enforcing SSL verification as default behavior
-        response = httpx.get(url, timeout=timeout, follow_redirects=True, verify=True) 
-        end_time = time.time()
+    # 2. WAF/CDN Detections (Heuristics)
+    headers_str = str(response.headers).lower()
+    waf_detected = "None identified"
+    if "cloudflare" in server_header or "cf-ray" in headers_str:
+        waf_detected = "Cloudflare"
+    elif "awselb" in server_header:
+        waf_detected = "AWS WAF / ELB"
+    elif "x-sucuri" in headers_str:
+        waf_detected = "Sucuri WAF"
         
-        response_time_ms = round((end_time - start_time) * 1000, 2)
-        return analyze_response(response, url=url, response_time_ms=response_time_ms)
-    except httpx.ConnectError as e:
-        err_msg = str(e)
-        if "CERTIFICATE_VERIFY_FAILED" in err_msg or "certificate verify failed" in err_msg.lower():
-            return _error_result(url, "REQ-SSL-ERR", "TLS/SSL Certificate Error", f"Failed to verify the target's SSL certificate. This often indicates a local environment trust issue or an invalid/expired target certificate. Error: {err_msg}")
-        return _error_result(url, "REQ-CONN-ERR", "Connection Error", f"Failed to connect to {url}. Ensure the target is reachable. Error: {err_msg}")
-    except httpx.TimeoutException as e:
-        return _error_result(url, "REQ-TO-ERR", "Timeout Error", f"Request to {url} timed out after {timeout} seconds.")
-    except httpx.RequestError as e:
-        return _error_result(url, "REQ-ERR", "Request Failed", f"An error occurred while requesting {url}. Error: {str(e)}")
+    if waf_detected != "None identified":
+        findings.append(Finding(
+            rule_id="SEC-INFRA-WAF", title="WAF/CDN Detected",
+            description=f"The target appears to be protected by {waf_detected}.",
+            severity=Severity.INFO,
+            recommendation="Information only. Note that WAFs may block deeper active scans."
+        ))
+        
+    # 3. CORS Misconfiguration Detection
+    aca_origin = response.headers.get("Access-Control-Allow-Origin")
+    if aca_origin == "*":
+        findings.append(Finding(
+            rule_id="SEC-CORS-STAR", title="Overly Permissive CORS Policy",
+            description="Access-Control-Allow-Origin is set to '*'. Any website can read data from this endpoint.",
+            severity=Severity.MEDIUM,
+            recommendation="Restrict CORS to specific trusted domains."
+        ))
+        
+    return findings
 
-def _error_result(url: str, rule_id: str, title: str, description: str) -> ScanResult:
-    f = Finding(
-        rule_id=rule_id,
-        title=title,
-        description=description,
-        severity=Severity.CRITICAL,
-        recommendation="Verify connectivity, DNS settings, and target URL."
-    )
-    counts = {sev.value: 0 for sev in Severity}
-    counts[Severity.CRITICAL.value] = 1
+def analyze_response(response: httpx.Response, url: str) -> ScanResult:
+    """Analyze a single HTTP response and gather all findings."""
+    all_findings = []
     
+    # Analyze Response Headers
+    all_findings.extend(analyze_headers(response))
+    
+    # Analyze Cookies
+    all_findings.extend(analyze_cookies(response))
+    
+    # Analyze Advanced Tech / WAF / CORS
+    all_findings.extend(analyze_tech_stack(response))
+
     return ScanResult(
         target_url=url,
-        status_code=0,
-        response_time_ms=0.0,
-        findings=[f],
-        risk_rating=Severity.CRITICAL,
-        severity_counts=counts
+        status_code=response.status_code,
+        findings=all_findings
     )
+    
+def scan_target(url: str, timeout: float = 10.0) -> ScanResult:
+    """Perform a deep scan including an active OPTIONS request test."""
+    start_time = time.time()
+    
+    findings = []
+    try:
+        # Step 1: Base HTTP GET request
+        response = httpx.get(url, timeout=timeout, follow_redirects=True)
+        scan_result = analyze_response(response, url=url)
+        
+        # Step 2: Active Recon (OPTIONS HTTP Method to check enabled features)
+        try:
+            options_resp = httpx.options(url, timeout=timeout)
+            allow_header = options_resp.headers.get("Allow", "").upper()
+            if allow_header:
+                if "PUT" in allow_header or "DELETE" in allow_header or "TRACE" in allow_header:
+                    scan_result.findings.append(Finding(
+                        rule_id="SEC-HTTP-METHODS", title="Dangerous HTTP Methods Enabled",
+                        description=f"The server allows potentially dangerous methods: {allow_header}",
+                        severity=Severity.MEDIUM,
+                        recommendation="Disable unnecessary HTTP methods (PUT, DELETE, TRACE) unless strictly required by the API."
+                    ))
+        except Exception:
+            pass # Keep going if OPTIONS fails
+
+    except Exception as e:
+        # If the scan completely fails, return a synthetic result
+        scan_result = ScanResult(
+            target_url=url,
+            status_code=0,
+            findings=[Finding(
+                rule_id="SEC-SCAN-ERR", title="Scan Execution Failed",
+                description=f"Could not connect to {url}. Error: {str(e)}",
+                severity=Severity.CRITICAL, recommendation="Verify the host is up and accessible."
+            )]
+        )
+
+    scan_result.response_time_ms = round((time.time() - start_time) * 1000, 2)
+    return scan_result

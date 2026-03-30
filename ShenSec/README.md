@@ -119,7 +119,7 @@ print(generate_report(result, "markdown"))
 - [x] Terminal CLI and JSON/HTML reporting
 - [x] PySide6 Graphical Dashboard with interactive filtering
 - [ ] Multi-endpoint scanning (crawler)
-- [ ] Advanced JWT analysis
+- [x] Advanced JWT analysis (Payload scanning, External Key Injection)
 - [ ] Export directly to PDF
 
 ### ⚠️ Disclaimer & Non-goals
@@ -230,7 +230,7 @@ print(generate_report(result, "markdown"))
 - [x] 命令行接口 (CLI) 与多格式报告输出
 - [x] 基于 PySide6 的图形化仪表盘与数据筛选
 - [ ] 多端点深度扫描 (爬虫集成)
-- [ ] 更高级的 JWT 分析机制
+- [x] 更高级的 JWT 分析机制 (敏感数据泄露检测、过期时间审计、Jku/Jwk 漏洞监测)
 - [ ] 直接导出 PDF 报告功能
 
 ### ⚠️ 免责声明及限制
@@ -243,3 +243,4 @@ ShenSec 被设计为 **严格用于防御性审计与快速安全态势检查**�
 <div align="center">
   <i>Developed with ❤️ for Open Source Security.</i>
 </div>
+
