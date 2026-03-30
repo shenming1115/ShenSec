@@ -26,7 +26,7 @@ def analyze_tech_stack(response: httpx.Response) -> List[Finding]:
         findings.append(Finding(
             rule_id="SEC-SRV-POWERED", title="Backend Framework Exposure (X-Powered-By)",
             description=f"Identified framework: {x_powered_by}",
-            severity=Severity.LOW,
+            severity=Severity.INFO,
             recommendation="Remove the X-Powered-By header to obscure the technology stack from attackers."
         ))
 
@@ -52,10 +52,10 @@ def analyze_tech_stack(response: httpx.Response) -> List[Finding]:
     aca_origin = response.headers.get("Access-Control-Allow-Origin")
     if aca_origin == "*":
         findings.append(Finding(
-            rule_id="SEC-CORS-STAR", title="Overly Permissive CORS Policy",
-            description="Access-Control-Allow-Origin is set to '*'. Any website can read data from this endpoint.",
-            severity=Severity.MEDIUM,
-            recommendation="Restrict CORS to specific trusted domains."
+            rule_id="SEC-CORS-STAR", title="Permissive CORS Policy",
+            description="Access-Control-Allow-Origin is set to '*'. Assess if this endpoint handles sensitive user session data.",
+            severity=Severity.LOW,
+            recommendation="If this is an authenticated API, restrict CORS to specific trusted domains."
         ))
         
     return findings
@@ -76,11 +76,12 @@ def analyze_response(response: httpx.Response, url: str) -> ScanResult:
     return ScanResult(
         target_url=url,
         status_code=response.status_code,
+        response_time_ms=0.0,
         findings=all_findings
     )
     
 def scan_target(url: str, timeout: float = 10.0) -> ScanResult:
-    """Perform a deep scan including an active OPTIONS request test."""
+    """Perform an active scan (Probing HTTP Methods, WAF heuristic, Framework exposure)."""
     start_time = time.time()
     
     findings = []
@@ -109,6 +110,7 @@ def scan_target(url: str, timeout: float = 10.0) -> ScanResult:
         scan_result = ScanResult(
             target_url=url,
             status_code=0,
+            response_time_ms=0.0,
             findings=[Finding(
                 rule_id="SEC-SCAN-ERR", title="Scan Execution Failed",
                 description=f"Could not connect to {url}. Error: {str(e)}",
@@ -116,5 +118,22 @@ def scan_target(url: str, timeout: float = 10.0) -> ScanResult:
             )]
         )
 
+    # Calculate overall risk based on highest severity finding
+    counts = {s.value: 0 for s in Severity}
+    for f in scan_result.findings:
+        counts[f.severity.value] += 1
+        
+    rating = Severity.INFO
+    if counts[Severity.CRITICAL.value] > 0:
+        rating = Severity.CRITICAL
+    elif counts[Severity.HIGH.value] > 0:
+        rating = Severity.HIGH
+    elif counts[Severity.MEDIUM.value] > 0:
+        rating = Severity.MEDIUM
+    elif counts[Severity.LOW.value] > 0:
+        rating = Severity.LOW
+
+    scan_result.severity_counts = counts
+    scan_result.risk_rating = rating
     scan_result.response_time_ms = round((time.time() - start_time) * 1000, 2)
     return scan_result

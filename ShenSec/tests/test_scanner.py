@@ -59,3 +59,63 @@ def test_analyze_jwt_alg_none():
     rule_ids = [f.rule_id for f in findings]
     assert "SEC-JWT-002" in rule_ids
     assert "SEC-JWT-NOEXP" in rule_ids
+from shensec.scanner.core import analyze_tech_stack, scan_target, analyze_response
+from shensec.models import Severity
+
+def test_analyze_tech_stack():
+    headers = {
+        "Server": "nginx/1.18.0",
+        "X-Powered-By": "Express",
+        "Access-Control-Allow-Origin": "*"
+    }
+    response = httpx.Response(200, headers=headers, request=httpx.Request("GET", "http://test"))
+    findings = analyze_tech_stack(response)
+    
+    assert len(findings) == 3
+    rule_ids = [f.rule_id for f in findings]
+    assert "SEC-SRV-INFO" in rule_ids
+    assert "SEC-SRV-POWERED" in rule_ids
+    assert "SEC-CORS-STAR" in rule_ids
+
+    # Validate correct updated severities
+    for f in findings:
+        if f.rule_id == "SEC-CORS-STAR":
+            assert f.severity == Severity.LOW
+        elif f.rule_id == "SEC-SRV-POWERED":
+            assert f.severity == Severity.INFO
+
+def test_analyze_response():
+    response = httpx.Response(200, request=httpx.Request("GET", "http://test"))
+    result = analyze_response(response, "http://test")
+    assert result.status_code == 200
+    assert result.response_time_ms == 0.0 # Placeholder correctly set
+
+def test_scan_target_network_error():
+    result = scan_target("http://127.0.0.1:99999")
+    assert result.status_code == 0
+    assert len(result.findings) == 1
+    assert result.findings[0].rule_id == "SEC-SCAN-ERR"
+    assert result.risk_rating == Severity.CRITICAL
+
+def test_scan_target_aggregation(monkeypatch):
+    def mock_get(*args, **kwargs):
+         headers = {
+            "Server": "nginx/1.18.0",
+            "Access-Control-Allow-Origin": "*",
+            "Allow": "GET, POST, OPTIONS, PUT, DELETE"
+         }
+         return httpx.Response(200, headers=headers, request=httpx.Request("GET", "http://test"))
+         
+    def mock_options(*args, **kwargs):
+         headers = {
+            "Allow": "GET, POST, OPTIONS, PUT, DELETE"
+         }
+         return httpx.Response(200, headers=headers, request=httpx.Request("OPTIONS", "http://test"))
+         
+    monkeypatch.setattr(httpx, "get", mock_get)
+    monkeypatch.setattr(httpx, "options", mock_options)
+    
+    result = scan_target("http://test")
+    
+    assert result.severity_counts[Severity.MEDIUM.value] >= 1
+    assert result.response_time_ms >= 0

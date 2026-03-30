@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget,
@@ -223,24 +223,34 @@ class MainWindow(QMainWindow):
         rating = self.current_result.risk_rating.value
         self.lbl_risk.setText(f"Overall Risk: {rating}")
         
-        # Color code the rating
+        # Dark theme compatible colors for the Risk Label
         color_map = {
-            "CRITICAL": "red",
-            "HIGH": "orange",
-            "MEDIUM": "goldenrod",
-            "LOW": "green",
-            "INFO": "blue"
+            "CRITICAL": "#ff5555",
+            "HIGH": "#ffaa00",
+            "MEDIUM": "#f0e68c",
+            "LOW": "#55ff55",
+            "INFO": "#55aaff"
         }
-        color = color_map.get(rating, "black")
-        self.lbl_risk.setStyleSheet(f"color: {color};")
-        
+        color = color_map.get(rating, "white")
+        # Add a subtle background pill-style look to the label
+        self.lbl_risk.setStyleSheet(f"""
+            QLabel {{
+                color: {color};
+                background-color: rgba(255, 255, 255, 0.1);
+                padding: 4px 8px;
+                border-radius: 4px;
+                border: 1px solid {color};
+            }}
+        """)
+
         counts = self.current_result.severity_counts
+        # Add formatting to counts
         self.lbl_counts.setText(
-            f"CRITICAL: {counts.get('CRITICAL', 0)} | "
-            f"HIGH: {counts.get('HIGH', 0)} | "
-            f"MEDIUM: {counts.get('MEDIUM', 0)} | "
-            f"LOW: {counts.get('LOW', 0)} | "
-            f"INFO: {counts.get('INFO', 0)}"
+            f"<span style='color:#ff5555; font-weight:bold;'>CRITICAL: {counts.get('CRITICAL', 0)}</span> &nbsp;|&nbsp; "
+            f"<span style='color:#ffaa00; font-weight:bold;'>HIGH: {counts.get('HIGH', 0)}</span> &nbsp;|&nbsp; "
+            f"<span style='color:#f0e68c; font-weight:bold;'>MEDIUM: {counts.get('MEDIUM', 0)}</span> &nbsp;|&nbsp; "
+            f"<span style='color:#55ff55; font-weight:bold;'>LOW: {counts.get('LOW', 0)}</span> &nbsp;|&nbsp; "
+            f"<span style='color:#55aaff; font-weight:bold;'>INFO: {counts.get('INFO', 0)}</span>"
         )
 
     def _populate_table(self, findings):
@@ -248,28 +258,30 @@ class MainWindow(QMainWindow):
         self.table.setRowCount(len(findings))
         for row, f in enumerate(findings):
             item_sev = QTableWidgetItem(f.severity.value)
-            # Useful to sort by severity impact internally if we map it, but text sorting works for now
+            # Center the severity column just to be fancy
+            item_sev.setTextAlignment(Qt.AlignCenter)
             item_id = QTableWidgetItem(f.rule_id)
             item_title = QTableWidgetItem(f.title)
             item_desc = QTableWidgetItem(f.description)
 
-            # Optional color-coding for table cells
+            # Dark theme appropriate typography colors instead of backgrounds
             color_map = {
-                Severity.CRITICAL: QColor(255, 200, 200),
-                Severity.HIGH: QColor(255, 228, 181),
-                Severity.MEDIUM: QColor(255, 250, 205),
-                Severity.LOW: QColor(200, 255, 200),
-                Severity.INFO: QColor(200, 200, 255),
+                Severity.CRITICAL: QColor(255, 85, 85),
+                Severity.HIGH: QColor(255, 170, 0),
+                Severity.MEDIUM: QColor(240, 230, 140),
+                Severity.LOW: QColor(85, 255, 85),
+                Severity.INFO: QColor(85, 170, 255),
             }
-            bg_color = color_map.get(f.severity)
+            fg_color = color_map.get(f.severity)
 
-            # Use dark text for better readability on light backgrounds (since background colors are very pale/light)
-            dark_text_color = QColor(0, 0, 0)
-
-            if bg_color:
+            if fg_color:
                 for item in (item_sev, item_id, item_title, item_desc):
-                    item.setBackground(bg_color)
-                    item.setForeground(dark_text_color)
+                    item.setForeground(fg_color)
+                
+                # Make the severity column bold
+                font = item_sev.font()
+                font.setBold(True)
+                item_sev.setFont(font)
 
             self.table.setItem(row, 0, item_sev)
             self.table.setItem(row, 1, item_id)
