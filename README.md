@@ -12,7 +12,7 @@
   </p>
 
   <p>
-    <a href="#english">English</a> | <a href="#%E4%B8%AD%E6%96%87">中文</a>
+    <a href="#english">English</a> | <a href="#中文">中文</a>
   </p>
 </div>
 
@@ -22,8 +22,30 @@
 
 **ShenSec** is a Python-based package designed to help developers perform basic web security auditing and generate useful analytical reports. Instead of acting as an offensive hacking tool, the package focuses on defensive auditing, allowing users to inspect their own websites or APIs and identify common weaknesses in a structured way.
 
-### ✨ Features
+### 💡 Why ShenSec?
+ShenSec is designed for developers who want a fast, no-noise security audit without running heavy enterprise scanners.
+- **Lightweight**: Minimal dependencies, runs in seconds.
+- **Developer-friendly**: Easy to integrate into your existing Python scripts.
+- **No offensive payloads**: Strictly defensive. Safe to run on production.
+- **Clear risk summarization**: Generates HTML/Markdown/JSON reports instantly.
 
+### 🖥️ Preview
+
+**Graphical Interface (GUI)**
+
+![ShenSec GUI Dashboard](https://raw.githubusercontent.com/ShenSec/shensec/main/docs/gui_dashboard.png)
+*(Note: Please run `shensec gui` locally, take a screenshot, and upload it as `docs/gui_dashboard.png`)*
+
+**CLI Output**
+```text
+Risk Rating: HIGH
+
+Findings:
+- Critical: Missing Strict-Transport-Security (HSTS)
+- High: Cookie without HttpOnly flag
+```
+
+### ✨ Features
 - **Security Headers**: Check for missing or misconfigured security headers (HSTS, CSP, X-Frame-Options).
 - **Cookies**: Audit cookie flags for security (Secure, HttpOnly, SameSite).
 - **JWT Inspection**: Validate JWT structure and identify weak algorithms like `alg: none`.
@@ -32,13 +54,7 @@
 
 ### 📦 Installation
 
-Since the package uses [`uv`](https://docs.astral.sh/uv/) for dependency management:
-```bash
-uv sync
-uv build
-```
-
-Or install it directly via pip:
+**For Users (via pip)**
 ```bash
 pip install shensec
 ```
@@ -47,6 +63,14 @@ pip install shensec
 If you wish to use the graphical user interface, make sure to install the optional `gui` dependencies:
 ```bash
 pip install "shensec[gui]"
+```
+
+**For Contributors (via uv)**
+```bash
+git clone https://github.com/shenming1115/Web-Security-Test-.git
+cd Web-Security-Test-/ShenSec
+uv sync
+uv build
 ```
 
 ### 🚀 Quick Start
@@ -89,6 +113,15 @@ print(f"Risk Rating: {result.risk_rating.value}")
 print(generate_report(result, "markdown"))
 ```
 
+### 🛣️ Roadmap
+- [x] Basic security header detection
+- [x] JWT inspection module
+- [x] Terminal CLI and JSON/HTML reporting
+- [x] PySide6 Graphical Dashboard with interactive filtering
+- [ ] Multi-endpoint scanning (crawler)
+- [ ] Advanced JWT analysis
+- [ ] Export directly to PDF
+
 ### ⚠️ Disclaimer & Non-goals
 ShenSec is designed **strictly for defensive auditing and quick security posture checks**. 
 - It is **not** an enterprise DAST/SAST scanner and does not send offensive payloads or execute SQL injection/Cross-Site Scripting attacks.
@@ -100,8 +133,30 @@ ShenSec is designed **strictly for defensive auditing and quick security posture
 
 **ShenSec** 是一个基于 Python 的 Web 安全审计工具，旨在帮助开发者进行基础架构级安全扫描，并生成清晰的分析报告。ShenSec 并非攻击性的黑客工具，而是专注于防守型审计，协助用户以结构化的方式检查自己的网站或 API 以识别常见的错误配置。
 
-### ✨ 核心特性
+### 💡 为什么选择 ShenSec?
+ShenSec 专为希望获得快速、无干扰体验的开发者设计，避免了运行笨重企业级扫描器的繁琐。
+- **极致轻量**: 极少的依赖，秒级启动与扫描。
+- **开发者友好**: 可以无缝集成到你的 Python 自动化脚本中。
+- **无攻击性**: 绝对防守型，不会发送恶意 payload，可安全用于生产环境。
+- **清晰的风险报告**: 瞬间生成 HTML、Markdown 或 JSON 格式的审计报告。
 
+### 🖥️ 运行效果展示
+
+**图形化界面 (GUI)**
+
+![ShenSec GUI Dashboard](https://raw.githubusercontent.com/ShenSec/shensec/main/docs/gui_dashboard.png)
+*(注：这里预留了截图位置，请在本地运行 `shensec gui` 并截图保存至项目 `docs/gui_dashboard.png`)*
+
+**命令行输出 (CLI)**
+```text
+风险评级: HIGH
+
+发现安全问题:
+- 严重 (Critical): 缺少 Strict-Transport-Security (HSTS)
+- 高危 (High): Cookie 缺少 HttpOnly 属性
+```
+
+### ✨ 核心特性
 - **安全响应头 (Security Headers)**: 检查是否缺失或错误配置安全响应头（例如 HSTS, CSP, X-Frame-Options）。
 - **Cookie 安全**: 审计 Cookie 标记的安全性（例如 Secure, HttpOnly, SameSite 属性）。
 - **JWT 检查**: 验证 JWT 结构并识别诸如 `alg: none` 的弱加密算法风险。
@@ -110,13 +165,7 @@ ShenSec is designed **strictly for defensive auditing and quick security posture
 
 ### 📦 安装指南
 
-推荐使用 [`uv`](https://docs.astral.sh/uv/) 工具进行管理和构建：
-```bash
-uv sync
-uv build
-```
-
-或者使用 pip 标准安装：
+**普通用户推荐 (使用 pip)**
 ```bash
 pip install shensec
 ```
@@ -125,6 +174,14 @@ pip install shensec
 如果您希望使用图形界面来查看扫描结果：
 ```bash
 pip install "shensec[gui]"
+```
+
+**开发者/贡献者推荐 (使用 uv)**
+```bash
+git clone https://github.com/shenming1115/Web-Security-Test-.git
+cd Web-Security-Test-/ShenSec
+uv sync
+uv build
 ```
 
 ### 🚀 快速开始
@@ -166,6 +223,15 @@ result = scan_target("https://example.com", timeout=5.0)
 print(f"风险评级: {result.risk_rating.value}")
 print(generate_report(result, "markdown"))
 ```
+
+### 🛣️ 演进路线图 (Roadmap)
+- [x] 基础安全响应头检测
+- [x] JWT 令牌安全分析
+- [x] 命令行接口 (CLI) 与多格式报告输出
+- [x] 基于 PySide6 的图形化仪表盘与数据筛选
+- [ ] 多端点深度扫描 (爬虫集成)
+- [ ] 更高级的 JWT 分析机制
+- [ ] 直接导出 PDF 报告功能
 
 ### ⚠️ 免责声明及限制
 ShenSec 被设计为 **严格用于防御性审计与快速安全态势检查**。
