@@ -24,6 +24,9 @@ def test_json_formatter():
     output = generate_report(result, "json")
     assert '"target_url": "https://example.com"' in output
     assert '"rule_id": "TEST-001"' in output
+    assert '"risk_rating": "HIGH"' in output
+    assert '"CRITICAL": 0' in output
+    assert '"HIGH": 1' in output
 
 def test_markdown_formatter():
     result = get_mock_result()

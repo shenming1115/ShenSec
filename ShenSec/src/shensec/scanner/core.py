@@ -12,6 +12,34 @@ def calculate_risk_rating(findings: list[Finding]) -> Severity:
             return sev
     return Severity.INFO
 
+def analyze_response(response: httpx.Response, url: str = None, response_time_ms: float = 0.0) -> ScanResult:
+    """Analyze an already fetched httpx.Response object."""
+    target_url = url or str(response.url)
+    findings = []
+    
+    # 1. Inspect Headers
+    header_findings = analyze_headers(response)
+    findings.extend(header_findings)
+    
+    # 2. Inspect Cookies
+    cookie_findings = analyze_cookies(response)
+    findings.extend(cookie_findings)
+    
+    counts = {sev.value: 0 for sev in Severity}
+    for f in findings:
+        counts[f.severity.value] += 1
+        
+    risk_rating = calculate_risk_rating(findings)
+    
+    return ScanResult(
+        target_url=target_url,
+        status_code=response.status_code,
+        response_time_ms=response_time_ms,
+        findings=findings,
+        risk_rating=risk_rating,
+        severity_counts=counts
+    )
+
 def scan_target(url: str, timeout: float = 10.0) -> ScanResult:
     """Core function to orchestrate the scanning process on a given URL."""
     try:
@@ -21,31 +49,7 @@ def scan_target(url: str, timeout: float = 10.0) -> ScanResult:
         end_time = time.time()
         
         response_time_ms = round((end_time - start_time) * 1000, 2)
-        
-        findings = []
-        
-        # 1. Inspect Headers
-        header_findings = analyze_headers(response)
-        findings.extend(header_findings)
-        
-        # 2. Inspect Cookies
-        cookie_findings = analyze_cookies(response)
-        findings.extend(cookie_findings)
-        
-        counts = {sev.value: 0 for sev in Severity}
-        for f in findings:
-            counts[f.severity.value] += 1
-            
-        risk_rating = calculate_risk_rating(findings)
-        
-        return ScanResult(
-            target_url=url,
-            status_code=response.status_code,
-            response_time_ms=response_time_ms,
-            findings=findings,
-            risk_rating=risk_rating,
-            severity_counts=counts
-        )
+        return analyze_response(response, url=url, response_time_ms=response_time_ms)
     except httpx.ConnectError as e:
         err_msg = str(e)
         if "CERTIFICATE_VERIFY_FAILED" in err_msg or "certificate verify failed" in err_msg.lower():

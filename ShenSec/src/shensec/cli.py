@@ -55,5 +55,19 @@ def scan(
         typer.echo(report_content)
         typer.echo("\n--------------------\n")
 
+@app.command()
+def gui():
+    """
+    Launch the ShenSec Graphical User Interface (PySide6).
+    """
+    try:
+        from .gui.app import run_gui
+        typer.secho("Launching GUI...", fg=typer.colors.CYAN)
+        run_gui()
+    except ImportError as e:
+        typer.secho("Failed to load GUI. Please ensure PySide6 is installed. Try: pip install shensec[gui]", fg=typer.colors.RED)
+        typer.secho(f"Error: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
 if __name__ == "__main__":
     app()

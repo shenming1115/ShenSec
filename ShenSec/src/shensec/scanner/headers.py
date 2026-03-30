@@ -33,14 +33,6 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
                 severity=Severity.LOW,
                 recommendation="Add 'includeSubDomains' to protect all subdomains."
             ))
-        if "preload" not in hsts_val:
-            findings.append(Finding(
-                rule_id="SEC-HDR-HSTS-NOPRELOAD",
-                title="HSTS Missing preload",
-                description="The HSTS header lacks the 'preload' directive.",
-                severity=Severity.INFO,
-                recommendation="Consider adding 'preload' and submitting your domain to the HSTS preload list."
-            ))
 
     # 2. X-Frame-Options
     if "x-frame-options" not in headers:

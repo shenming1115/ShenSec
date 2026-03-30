@@ -1,102 +1,179 @@
-# ShenSec
+﻿<div align="center">
+  <img src="https://raw.githubusercontent.com/ShenSec/shensec/main/docs/logo_placeholder.png" alt="ShenSec Logo" width="150" onerror="this.style.display='none'">
+  
+  <h1>🛡️ ShenSec</h1>
+  <p><b>A Modern Python-based Web Security Auditor / 现代 Python Web 安全审计工具</b></p>
+
+  <p>
+    <a href="https://pypi.org/project/shensec/"><img src="https://img.shields.io/pypi/v/shensec.svg" alt="PyPI Version"></a>
+    <a href="https://pypi.org/project/shensec/"><img src="https://img.shields.io/pypi/pyversions/shensec.svg" alt="Python Versions"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+    <img src="https://img.shields.io/badge/GUI-PySide6-brightgreen" alt="GUI: PySide6">
+  </p>
+
+  <p>
+    <a href="#english">English</a> | <a href="#%E4%B8%AD%E6%96%87">中文</a>
+  </p>
+</div>
+
+---
+
+<h2 id="english">🇬🇧 English</h2>
 
 **ShenSec** is a Python-based package designed to help developers perform basic web security auditing and generate useful analytical reports. Instead of acting as an offensive hacking tool, the package focuses on defensive auditing, allowing users to inspect their own websites or APIs and identify common weaknesses in a structured way.
 
-## Features
+### ✨ Features
 
 - **Security Headers**: Check for missing or misconfigured security headers (HSTS, CSP, X-Frame-Options).
 - **Cookies**: Audit cookie flags for security (Secure, HttpOnly, SameSite).
 - **JWT Inspection**: Validate JWT structure and identify weak algorithms like `alg: none`.
 - **Reporting**: Generate easily readable reports in format of your choice, including `markdown`, `json`, and `html`.
-- **Modern CLI**: Powered by Typer for intuitive command-line inputs.
+- **Modern UI**: Intuitive Typer CLI and an optional rich graphical interface using PySide6.
 
-## Project Structure
-```text
-ShenSec/
-├── src/shensec/
-│   ├── cli.py             # Typer CLI application entrypoint
-│   ├── models.py          # Pydantic data structures for Risks/Findings
-│   ├── reporting/         # HTML/JSON/Markdown Formatters
-│   └── scanner/           # Checking logic (headers.py, cookies.py, jwt.py, core.py)
-├── tests/                 # Unit tests (pytest)
-└── pyproject.toml         # Build / Dependency config (uv)
-```
+### 📦 Installation
 
-## Installation
-
-Since the package uses `uv` for dependency management:
+Since the package uses [`uv`](https://docs.astral.sh/uv/) for dependency management:
 ```bash
 uv sync
 uv build
 ```
 
-Or run via `uv` directly from the source code:
+Or install it directly via pip:
 ```bash
-uv run shensec --help
+pip install shensec
 ```
 
-## Usage
+**GUI Support**  
+If you wish to use the graphical user interface, make sure to install the optional `gui` dependencies:
+```bash
+pip install "shensec[gui]"
+```
 
-### 1. Basic Scan (Markdown Output)
+### 🚀 Quick Start
+
+**Using the Graphical Dashboard (GUI)**
+```bash
+shensec gui
+```
+> *(The GUI allows interactive filtering, result sorting, and one-click markdown exports)*
+
+**CLI Core Scans**
 Run a quick security audit against a host and output a markdown report on the terminal:
 ```bash
-uv run shensec https://example.com
+shensec scan https://example.com
 ```
 
-### 2. Output to HTML
 Save the output as a fully styled HTML file:
 ```bash
-uv run shensec https://example.com --format html -o result.html
+shensec scan https://example.com --format html -o result.html
 ```
 
-### 3. Local Token Inspection
 Analyze a JWT locally alongside a target check:
 ```bash
-uv run shensec https://example.com --jwt "eyJhbGciOiJub25lIn0.eyJzdWIiOiIxMjMifQ."
+shensec scan https://example.com --jwt "eyJhbGciOiJub25lIn0.eyJzdWIiOiIxMjMifQ."
 ```
 
-## Sample Output
+### 💻 Library Usage
 
-```text
-Starting ShenSec Scan on: https://example.com
+You can also import ShenSec into your own Python tools or scripts:
 
---- Scan Results ---
+```python
+import httpx
+from shensec import scan_target, analyze_response, analyze_jwt, generate_report
 
-# ShenSec Security Scan Report
+# 1. Direct scanning
+result = scan_target("https://example.com", timeout=5.0)
 
-**Target URL**: https://example.com
-**Status Code**: 200
-**Response Time**: 118.4 ms
-
-## Security Risk Analysis
-**Overall Risk Rating**: **HIGH**
-- CRITICAL: 0
-- HIGH: 2
-- MEDIUM: 1
-- LOW: 0
-- INFO: 0
-
-## Findings Summary
-Total Issues Found: 3
-
-## Detailed Findings
-
-### 1. Missing Strict-Transport-Security Header (HIGH)
-- **Rule ID**: SEC-HDR-001
-- **Description**: The application does not enforce HTTPS connections using HSTS.
-- **Recommendation**: Add the Strict-Transport-Security header with an appropriate max-age.
-...
+# Output the findings
+print(f"Risk Rating: {result.risk_rating.value}")
+print(generate_report(result, "markdown"))
 ```
 
-## Testing
+### ⚠️ Disclaimer & Non-goals
+ShenSec is designed **strictly for defensive auditing and quick security posture checks**. 
+- It is **not** an enterprise DAST/SAST scanner and does not send offensive payloads or execute SQL injection/Cross-Site Scripting attacks.
+- It focuses on **"Low Hanging Fruit"**: HTTP Header configurations, flag correctness on Cookies, and glaring configuration issues in JWT tokens.
 
-Run the included automated tests via `pytest`:
+---
+
+<h2 id="中文">🇨🇳 中文</h2>
+
+**ShenSec** 是一个基于 Python 的 Web 安全审计工具，旨在帮助开发者进行基础架构级安全扫描，并生成清晰的分析报告。ShenSec 并非攻击性的黑客工具，而是专注于防守型审计，协助用户以结构化的方式检查自己的网站或 API 以识别常见的错误配置。
+
+### ✨ 核心特性
+
+- **安全响应头 (Security Headers)**: 检查是否缺失或错误配置安全响应头（例如 HSTS, CSP, X-Frame-Options）。
+- **Cookie 安全**: 审计 Cookie 标记的安全性（例如 Secure, HttpOnly, SameSite 属性）。
+- **JWT 检查**: 验证 JWT 结构并识别诸如 `alg: none` 的弱加密算法风险。
+- **丰富的报告生成**: 支持生成多种格式的报告，包含 `markdown`, `json`, 以及 `html`。
+- **现代化界面**: 底层由 Typer 驱动的强大命令行界面（CLI），并提供基于 PySide6 的图形用户界面（GUI）。
+
+### 📦 安装指南
+
+推荐使用 [`uv`](https://docs.astral.sh/uv/) 工具进行管理和构建：
 ```bash
-uv run pytest
+uv sync
+uv build
 ```
 
-## Disclaimer & Limitations
-ShenSec is designed **strictly for defensive auditing and educational purposes**. 
-- It is **not** an enterprise DAST/SAST scanner and does not send offensive payloads, fuzz inputs, or execute SQL injection/Cross-Site Scripting attacks.
-- It cannot read server-side backend logic.
-- **Note on HTTPS Errors**: If the CLI returns a `TLS/SSL Certificate Error`, it often indicates that the target server is using an untrusted or expired certificate, or your local environment's certificate trust store is missing roots.
+或者使用 pip 标准安装：
+```bash
+pip install shensec
+```
+
+**通过带界面的版本安装（GUI 支持）**  
+如果您希望使用图形界面来查看扫描结果：
+```bash
+pip install "shensec[gui]"
+```
+
+### 🚀 快速开始
+
+**启动图形界面控制台 (GUI)**
+```bash
+shensec gui
+```
+> *(图形界面支持交互式筛选、结果排序及一键导出分析报告)*
+
+**使用命令行 (CLI) 快速扫描**  
+对目标站点进行安全审查，并在终端输出 markdown 格式的报告：
+```bash
+shensec scan https://example.com
+```
+
+将扫描报告导出为样式精美的 HTML 文件：
+```bash
+shensec scan https://example.com --format html -o result.html
+```
+
+在扫描网站的同时分析本地 JWT 令牌：
+```bash
+shensec scan https://example.com --jwt "eyJhbGciOiJub25lIn0.eyJzdWIiOiIxMjMifQ."
+```
+
+### 💻 作为开发库使用 (SDK)
+
+您也可以把 ShenSec 作为一个依赖库，导入到自己的 Python 脚本或自动化工具中：
+
+```python
+import httpx
+from shensec import scan_target, analyze_response, analyze_jwt, generate_report
+
+# 1. 发起扫描请求
+result = scan_target("https://example.com", timeout=5.0)
+
+# 输出风险评级及报告
+print(f"风险评级: {result.risk_rating.value}")
+print(generate_report(result, "markdown"))
+```
+
+### ⚠️ 免责声明及限制
+ShenSec 被设计为 **严格用于防御性审计与快速安全态势检查**。
+- 它 **不是** 替代企业级的 DAST/SAST 商业工具，不会发送恶意 payload、进行模糊测试(Fuzzing)、或是执行 SQL 注入和 XSS 攻击。
+- 工具的主要重心在于 **基础配置纠错**：如 HTTP Header 配置失误、Cookie 属性不当，以及 JWT 令牌等常见安全漏洞。
+
+<br/>
+
+<div align="center">
+  <i>Developed with ❤️ for Open Source Security.</i>
+</div>

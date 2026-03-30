@@ -1,16 +1,23 @@
 [project]
 name = "shensec"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Python Package for Web Security Auditing and Result Analysis"
 authors = [
     { name = "Developer" }
 ]
 readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.13"
 keywords = ["security", "audit", "scanner", "jwt", "cli"]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
     "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
 ]
 dependencies = [
     "httpx>=0.28.1",
@@ -18,6 +25,14 @@ dependencies = [
     "pydantic>=2.12.5",
     "typer>=0.24.1",
 ]
+
+[project.optional-dependencies]
+gui = ["pyside6>=6.11.0"]
+
+[project.urls]
+Homepage = "https://github.com/ShenSec/shensec"
+Repository = "https://github.com/ShenSec/shensec.git"
+Issues = "https://github.com/ShenSec/shensec/issues"
 
 [project.scripts]
 shensec = "shensec.cli:app"
