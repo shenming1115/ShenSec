@@ -1,5 +1,5 @@
 ﻿<div align="center">
-  <img src="https://raw.githubusercontent.com/shenming1115/Web-Security-Test-/main/docs/logo_placeholder.png" alt="ShenSec Logo" width="150" onerror="this.style.display='none'">
+  <img src="./docs/logo_placeholder.png" alt="ShenSec Logo" width="150" onerror="this.style.display='none'">
   
   <h1>🛡️ ShenSec</h1>
   <p><b>A Modern Python-based Web Security Auditor / 现代 Python Web 安全审计工具</b></p>
@@ -33,7 +33,7 @@ ShenSec is designed for developers who want a fast, no-noise security audit with
 
 **Graphical Interface (GUI)**
 
-![ShenSec GUI Dashboard](https://raw.githubusercontent.com/shenming1115/Web-Security-Test-/main/docs/gui_dashboard.png)
+![ShenSec GUI Dashboard](./docs/gui_dashboard.png)
 *(Note: Please run `shensec gui` locally, take a screenshot, and upload it as `docs/gui_dashboard.png`)*
 
 **CLI Output**
@@ -144,7 +144,7 @@ ShenSec 专为希望获得快速、无干扰体验的开发者设计，避免了
 
 **图形化界面 (GUI)**
 
-![ShenSec GUI Dashboard](https://raw.githubusercontent.com/shenming1115/Web-Security-Test-/main/docs/gui_dashboard.png)
+![ShenSec GUI Dashboard](./docs/gui_dashboard.png)
 *(注：这里预留了截图位置，请在本地运行 `shensec gui` 并截图保存至项目 `docs/gui_dashboard.png`)*
 
 **命令行输出 (CLI)**
