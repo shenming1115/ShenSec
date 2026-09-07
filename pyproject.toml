@@ -1,14 +1,14 @@
 [project]
 name = "shensec"
 version = "0.2.0"
-description = "A Python Package for Web Security Auditing and Result Analysis"
+description = "Defensive HTTP configuration auditing and local JWT inspection with CLI, API, and optional GUI"
 authors = [
-    { name = "Developer" }
+    { name = "Ch'ng Shen Ming" }
 ]
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.13"
-keywords = ["security", "audit", "scanner", "jwt", "cli"]
+keywords = ["security", "http", "security-headers", "cookies", "cors", "jwt", "audit", "cli"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -33,9 +33,9 @@ gui = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ShenSec/shensec"
-Repository = "https://github.com/ShenSec/shensec.git"
-Issues = "https://github.com/ShenSec/shensec/issues"
+Homepage = "https://github.com/shenming1115/ShenSec"
+Repository = "https://github.com/shenming1115/ShenSec"
+Issues = "https://github.com/shenming1115/ShenSec/issues"
 
 [project.scripts]
 shensec = "shensec.cli:app"
@@ -52,3 +52,7 @@ dev = [
     "hatchling>=1.29.0",
     "pytest>=9.0.2",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

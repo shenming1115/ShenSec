@@ -45,3 +45,7 @@ htmlcov/
 result.json
 result.md
 result.html
+# Local verification environments
+.venv-*/
+.uv-cache/
+.ruff_cache/
