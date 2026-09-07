@@ -24,7 +24,7 @@ Install the wheel in a separate environment to verify installed-package behavior
 
 ```bash
 uv venv .venv-wheel
-uv pip install --python .venv-wheel dist/shensec-0.2.0-py3-none-any.whl
+uv pip install --python .venv-wheel dist/shensec-0.2.1-py3-none-any.whl
 ```
 
 Use `.venv-wheel/bin/python` on POSIX or `.venv-wheel/Scripts/python.exe` on Windows to import `shensec`, run `-m shensec --help`, and render a sample HTML report. Update the filename when releasing a different version. For a network smoke check, start a local example server and use `shensec scan http://127.0.0.1:8000`; do not rely on third-party availability.

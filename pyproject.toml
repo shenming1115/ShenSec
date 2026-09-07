@@ -1,6 +1,6 @@
 [project]
 name = "shensec"
-version = "0.2.0"
+version = "0.2.1"
 description = "Defensive HTTP configuration auditing and local JWT inspection with CLI, API, and optional GUI"
 authors = [
     { name = "Ch'ng Shen Ming" }

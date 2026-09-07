@@ -6,11 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.2.1] - 2026-09-07
+
 ### Changed
-- Flattened the Python project into the repository root.
-- Corrected author and repository metadata; retained version 0.2.0.
-- Reworked documentation around implemented behavior and known limitations.
-- Removed unused development artifacts and added automated verification.
+- Refactored the repository into a standard root-level `src`-layout Python package.
+- Improved package metadata and corrected repository links.
+- Reworked the README for developer and recruiter readability.
+- Added package architecture documentation.
+- Added real GUI and CLI demonstration assets from a controlled localhost scan.
+- Improved project organization and removed obsolete development artifacts.
+
+### Testing / CI
+- Added GitHub Actions continuous integration.
+- Verified the full suite with 26 automated tests passing.
+- Verified PySide6 GUI tests in a headless environment.
+- Verified wheel and source distribution builds.
+
+### Security / Scope
+- Kept scanner logic and the public API unchanged.
+- Retained ShenSec's focus on defensive web security auditing.
 
 ## [0.2.0] - 2026-03-29
 ### Added

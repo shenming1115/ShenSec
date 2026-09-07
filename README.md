@@ -5,7 +5,7 @@
 [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-blue)](pyproject.toml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Local tests: 26 passed](https://img.shields.io/badge/Local_tests-26_passed-brightgreen)](tests/)
-[![Version 0.2.0](https://img.shields.io/badge/Version-0.2.0-blue)](pyproject.toml)
+[![Version 0.2.1](https://img.shields.io/badge/Version-0.2.1-blue)](pyproject.toml)
 
 Review **HTTP security headers, cookie flags, CORS, JWTs, and server information exposure** in systems you own or are authorized to assess. ShenSec turns focused configuration checks into structured findings with severity levels and remediation suggestions.
 
