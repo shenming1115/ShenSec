@@ -1,16 +1,31 @@
-# ShenSec
+<h1 align="center">
+  <img src="docs/shensec-logo.svg" alt="ShenSec logo" width="48" height="48" align="middle"> ShenSec
+</h1>
 
-**Catch web security and access regressions before deployment.**
+<p align="center">
+  <strong>Sign in automatically. Keep sessions alive. Verify every role.</strong><br>
+  The API security workbench for everyday regression checks.
+</p>
 
-An API security workbench with automatic login, session renewal, verified role comparisons, local history, baselines and CI gates. Review what changed without saving passwords or tokens in reports.
+<p align="center">
+  <a href="https://github.com/shenming1115/ShenSec/releases/tag/v0.5.0b1"><img src="https://img.shields.io/badge/Windows-10%2F11_x64-0078D4" alt="Windows 10/11 x64"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.5.0b1-238878" alt="Version 0.5.0b1 beta"></a>
+  <a href="https://github.com/shenming1115/ShenSec/actions/workflows/ci.yml"><img src="https://github.com/shenming1115/ShenSec/actions/workflows/ci.yml/badge.svg" alt="Tests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-64748b" alt="MIT license"></a>
+</p>
 
-[![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-blue)](pyproject.toml)
-[![Version](https://img.shields.io/badge/version-0.5.0b1-teal)](CHANGELOG.md)
-[![Tests](https://github.com/shenming1115/ShenSec/actions/workflows/ci.yml/badge.svg)](https://github.com/shenming1115/ShenSec/actions/workflows/ci.yml)
-[![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)](https://github.com/shenming1115/ShenSec/releases/tag/v0.5.0b1)
-[![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+<p align="center">
+  <a href="https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64.exe"><strong>Download Windows exe</strong></a> ·
+  <a href="https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64-portable.zip">Portable ZIP</a> ·
+  <a href="docs/windows-guide.zh-CN.md">Windows tutorial</a> ·
+  <a href="README.zh-CN.md">简体中文</a>
+</p>
 
-[简体中文](README.zh-CN.md) · [Windows tutorial](docs/windows-guide.zh-CN.md) · [Authentication guide](docs/authentication.md) · [CI integration](docs/ci.md)
+Catch web security and access regressions before deployment. Run authenticated API checks from the desktop or CLI, then review what changed in local history. Windows downloads include the runtime; passwords and tokens stay out of reports.
+
+| Automatic login | Role comparisons | Baselines & CI |
+| --- | --- | --- |
+| JSON/form sign-in, identity verification and session renewal | Explicit allow/deny expectations with a permission matrix and response evidence | Saved history, new/fixed issue tracking and exportable reports |
 
 ## See the real workflow in 27 seconds
 
@@ -32,9 +47,14 @@ For faster daily startup, use the [portable ZIP](https://github.com/shenming1115
 
 The demo runs in a separate temporary workspace, scans an authenticated loopback application before and after hardening, and opens populated history. It needs no production account or token. Select either run, inspect evidence, rescan and export reports. Closing its window stops the fixture and removes demo data.
 
+<details>
+<summary>Inspect the permission matrix before hardening</summary>
+
 ![Real login and role comparison workbench showing unexpected access in a controlled fixture](docs/permissions-workbench.png)
 
 The identity fixture checks **4 roles × 2 endpoints**, resolves **3 unexpected access observations**, and verifies **4 session renewals** in the post-fix run. The screenshot shows the controlled pre-fix state. HTTP transport observations remain because the fixture uses loopback HTTP. See [screenshots and reproducibility](docs/screenshots.md).
+
+</details>
 
 New in 0.5: **automatic JSON/form login, CSRF support, session renewal, verified role comparisons, a permission matrix and guided desktop setup**. Passwords and tokens stay in memory. [Identity workflows and examples](docs/identity-workflows.md).
 
@@ -49,9 +69,16 @@ Open the exe; projects and history persist across launches. The source launchers
 3. Run the audit and inspect the evidence and recommended actions. Accept a complete reviewed run as the baseline.
 4. Scan again. New issues, severity increases, fixes, and unverified observations are tracked separately. Prioritize actionable changes or search across targets, evidence, and recommendations.
 
+<details>
+<summary>Explore the login configuration and session activity</summary>
+
 ![Guided automatic login and identity verification](docs/login-workbench.png)
 
 ![Session state and renewal activity for each identity](docs/sessions-workbench.png)
+
+</details>
+
+[Authentication guide](docs/authentication.md) · [CI integration](docs/ci.md) · [All screenshots](docs/screenshots.md)
 
 Projects and indexed scan history live in `~/.shensec/workspace.sqlite3`. Use `--workspace PATH` or `SHENSEC_HOME` to choose another location. Configuration exports contain environment variable names, not credential values. Response Cookie changes remain isolated between target scans, while automatic login shares a verified seed session and single-flight renewal per identity. HTTP clients are reused per worker.
 

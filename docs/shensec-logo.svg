@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title desc">
+  <title id="title">ShenSec</title>
+  <desc id="desc">Mint shield and check mark on a dark blue tile, matching the Windows app icon.</desc>
+  <rect width="256" height="256" rx="52" fill="#142333"/>
+  <path d="M128 40 206 70 199 139C194 178 158 207 128 222 98 207 62 178 57 139L50 70Z" fill="#72dbc6"/>
+  <path d="m87 126 29 29 55-57" fill="none" stroke="#142333" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,10 +1,31 @@
-# ShenSec
+<h1 align="center">
+  <img src="docs/shensec-logo.svg" alt="ShenSec logo" width="48" height="48" align="middle"> ShenSec
+</h1>
 
-**面向开发者的 API 安全回归工作台：自动登录、会话续期、多角色权限对比。**
+<p align="center">
+  <strong>自动登录 · 会话续期 · 多角色权限对比</strong><br>
+  让 API 安全回归检查成为每天都能用的工作流。
+</p>
 
-支持登录后的 API 检查、OpenAPI 导入、自定义请求、历史与基线对比，以及 CI 风险门槛。**Windows exe 自带运行环境，双击即可使用。** 当前版本为 **0.5.0b1 测试版**。[English](README.md)
+<p align="center">
+  <a href="https://github.com/shenming1115/ShenSec/releases/tag/v0.5.0b1"><img src="https://img.shields.io/badge/Windows-10%2F11_x64-0078D4" alt="Windows 10/11 x64"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.5.0b1-238878" alt="Version 0.5.0b1 beta"></a>
+  <a href="https://github.com/shenming1115/ShenSec/actions/workflows/ci.yml"><img src="https://github.com/shenming1115/ShenSec/actions/workflows/ci.yml/badge.svg" alt="Tests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-64748b" alt="MIT license"></a>
+</p>
 
-[下载 Windows exe](https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64.exe) · [便携 ZIP（启动更快）](https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64-portable.zip) · [完整使用教程](docs/windows-guide.zh-CN.md)
+<p align="center">
+  <a href="https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64.exe"><strong>下载 Windows exe</strong></a> ·
+  <a href="https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64-portable.zip">便携 ZIP</a> ·
+  <a href="docs/windows-guide.zh-CN.md">完整使用教程</a> ·
+  <a href="README.md">English</a>
+</p>
+
+面向开发者的 API 安全回归工作台，支持登录后的接口、批量目标、OpenAPI 导入、历史记录与 CI 风险门槛。**Windows exe 自带运行环境，双击即可使用。** 当前为 **0.5.0b1 测试版**；报告不保存密码或 Token。
+
+| 自动登录与续期 | 多角色权限矩阵 | 历史与基线对比 |
+| --- | --- | --- |
+| JSON／表单登录、身份验证、到期刷新 | 为每个角色声明允许／拒绝，查看真实响应证据 | 跟踪新增和已修复问题，导出报告并接入 CI |
 
 ## 27 秒看懂真实操作
 
@@ -13,6 +34,8 @@
 **双击 exe → 一键本地演示 → 自动登录 → 会话续期 → 多角色权限矩阵 → 历史基线对比。**
 
 使用已发布的 Windows exe 实际操作：**4 个角色 × 2 个接口、4 次会话续期、8/8 项权限预期通过、3 项异常授权已修复**。同一个 owner 访问管理员接口，从修复前的 HTTP 200 变为修复后的 HTTP 403。GIF 配有英文步骤字幕，缩短了等待时间并放大关键细节；演示使用内置本机靶场。[录制说明](docs/screenshots.md#real-windows-demo-gif)。
+
+## 核心功能
 
 0.5 新增：
 
@@ -23,7 +46,8 @@
 
 [自动登录、续期与角色配置指南](docs/identity-workflows.md)。新靶场覆盖 4 个角色、8 项权限预期；修复后解决 3 项超出预期的访问，并完成 4 次会话续期。
 
-已有 API 能力：
+<details>
+<summary>更多 API 请求、OpenAPI 与 CI 能力</summary>
 
 - **真实 API 请求**：GET、HEAD、POST、PUT、PATCH、DELETE；环境变量请求体与预期状态码。
 - **OpenAPI 导入**：本地 3.0/3.1 JSON、路径与查询参数绑定、明确的跳过原因。
@@ -36,6 +60,8 @@
 
 [查看 API 请求编辑器](docs/api-workbench.png)
 
+</details>
+
 ## 先体验完整流程
 
 1. 从 [GitHub Releases](https://github.com/shenming1115/ShenSec/releases/tag/v0.5.0b1) 下载 exe，直接双击。支持 Windows 10/11 x64，无需安装 Python、uv，无需命令行或管理员权限。
@@ -45,7 +71,12 @@
 
 便携 ZIP 需要先完整解压，再双击 `ShenSec.exe`，保留旁边的 `_internal` 文件夹，适合每天频繁启动。单文件 exe 首次启动需要解包运行库。这一测试版尚未代码签名；系统可能提示发布者未知，请确认来自官方 Releases，并核对随包提供的 SHA256SUMS.txt 后按设备策略处理。
 
+<details>
+<summary>查看修复前的权限矩阵截图</summary>
+
 ![真实的自动登录与角色权限工作台，展示受控靶场修复前结果](docs/permissions-workbench.png)
+
+</details>
 
 ## 日常使用
 
@@ -62,9 +93,14 @@
 
 默认数据目录是 `~/.shensec`，可通过 `--workspace 路径` 或 `SHENSEC_HOME` 修改。配置与历史保存在本地 SQLite，历史列表使用索引，不会每次加载所有报告。结果表使用 Qt 数据模型，支持按文字、严重度和变化筛选。
 
+<details>
+<summary>查看自动登录配置与会话活动截图</summary>
+
 ![自动登录与身份断言配置](docs/login-workbench.png)
 
 ![各身份登录与会话续期记录](docs/sessions-workbench.png)
+
+</details>
 
 教程包含首次使用、账号登录、多角色权限、基线、报告、备份升级和故障处理：[Windows 使用教程](docs/windows-guide.zh-CN.md)。[截图说明及复现方法](docs/screenshots.md)。
 
