@@ -1,0 +1,28 @@
+name: Bug report
+description: A reproducible problem with scanning, authentication, history, or the interface
+body:
+  - type: markdown
+    attributes:
+      value: Please use a local or sanitized reproduction. Do not include credentials, private targets, or a workspace database. See SECURITY.md for sensitive reports.
+  - type: input
+    id: version
+    attributes:
+      label: ShenSec version / commit and operating system
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps or controlled fixture to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized output or screenshot

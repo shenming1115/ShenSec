@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "macros.html" import scan_details, finding_card %}
+{% block content %}
+<h1>Security regression report</h1>
+<p class="muted">{{ result.created_at.isoformat() }} · {{ result.results | length }} targets</p>
+<p class="muted">{{ result.duration_ms }} ms total{% if result.cancelled %} · CANCELLED{% endif %}</p>
+<div class="summary">
+  <div class="card"><span>Policy gate</span><strong>{{ result.gate.outcome | upper if result.gate else 'NOT SET' }}</strong></div>
+  <div class="card"><span>Highest observed risk</span><strong>{{ result.risk_rating.value }}</strong></div>
+  <div class="card"><span>Incomplete targets</span><strong>{{ result.failed_targets }}</strong></div>
+  <div class="card"><span>Gate violations</span><strong>{{ result.gate.violations | length if result.gate else 0 }}</strong></div>
+</div>
+{% if result.gate %}
+<p class="muted">Threshold: {{ result.gate.threshold.value if result.gate.threshold else 'disabled' }} · Scope: {{ 'new findings and severity increases' if result.gate.only_new else 'all current findings' }}</p>
+{% for error in result.gate.errors %}<div class="notice error">{{ error }}</div>{% endfor %}
+{% endif %}
+{% if result.comparison %}
+<h2>Changes since baseline</h2>
+{% for label, records in [('New', result.comparison.new), ('Regressed', result.comparison.regressed), ('Existing', result.comparison.existing), ('Resolved', result.comparison.resolved), ('Unverified', result.comparison.unverified)] %}
+<details{% if label in ['New', 'Regressed', 'Unverified'] and records %} open{% endif %}>
+  <summary>{{ label }} · {{ records | length }}</summary>
+  {% for record in records %}<p class="target-url muted">{{ record.target_url }}{% if record.previous_severity %} · {{ record.previous_severity.value }} → {{ record.finding.severity.value }}{% endif %}</p>{% if record.change_reason %}<p class="notice">{{ record.change_reason }}</p>{% endif %}{{ finding_card(record.finding) }}{% endfor %}
+</details>
+{% endfor %}
+<p class="muted">Added targets: {{ result.comparison.added_targets | length }} · Removed targets: {{ result.comparison.removed_targets | length }}</p>
+{% for target in result.comparison.removed_targets %}<p class="target-url">Removed: {{ target }}</p>{% endfor %}
+{% for target in result.comparison.context_changed_targets %}<div class="notice">Authentication or request context changed: {{ target }}</div>{% endfor %}
+{% endif %}
+{% if result.permissions %}
+<h2>Role permission comparison</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Expectation</th><th>Role</th><th>Expected</th><th>Observed</th><th>HTTP</th><th>Outcome</th></tr></thead>
+<tbody>{% for observation in result.permissions %}<tr><td>{{ observation.title }}<br><span class="muted">{{ observation.method }} {{ observation.target_url }}</span></td><td>{{ observation.role }}</td><td>{{ observation.expected }}</td><td>{{ observation.observed }}</td><td>{{ observation.status_code }}</td><td>{{ observation.outcome | upper }}<br>{{ observation.detail }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% if result.sessions %}
+<h2>Session activity</h2>
+<div class="table-wrap"><table><thead><tr><th>Identity</th><th>Mode</th><th>State</th><th>Logins</th><th>Refreshes</th><th>Renewals</th></tr></thead>
+<tbody>{% for session in result.sessions %}<tr><td>{{ session.scope }}: {{ session.profile }}</td><td>{{ session.mode }}</td><td>{{ session.state }}</td><td>{{ session.logins }}</td><td>{{ session.refreshes }}</td><td>{{ session.renewals }}</td></tr>{% endfor %}</tbody></table></div>
+{% endif %}
+<div class="table-wrap"><table>
+  <caption>Target overview</caption>
+  <thead><tr><th>Target</th><th>Status</th><th>HTTP</th><th>Risk</th><th>Findings</th></tr></thead>
+  <tbody>{% for scan in result.results %}<tr><td>{{ scan.request_method }} {{ scan.target_url }}</td><td>{{ scan.status | upper }}</td><td>{{ scan.status_code }}</td><td>{{ scan.risk_rating.value }}</td><td>{{ scan.findings | length }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<h2>Evidence and recommended actions</h2>
+{% for scan in result.results %}<details open><summary>{{ scan.target_url }}</summary>{{ scan_details(scan) }}</details>{% endfor %}
+{% endblock %}

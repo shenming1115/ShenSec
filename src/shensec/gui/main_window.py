@@ -3,22 +3,87 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget,
     QTableWidgetItem, QHeaderView, QGroupBox, QMessageBox, QFileDialog, QTabWidget,
-    QComboBox
+    QComboBox, QPlainTextEdit
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFont
+from PySide6.QtCore import Qt, Signal, QUrl, QTimer
+from PySide6.QtGui import QColor, QFont, QDesktopServices
+from pathlib import Path
 from .worker import ScanWorker, JwtWorker
 from ..api import ScanResult, generate_report, Severity
+from ..models import SEVERITY_RANK
+from .workbench import Workbench
+
+
+class SeverityItem(QTableWidgetItem):
+    def __lt__(self, other):
+        return SEVERITY_RANK[Severity(self.text())] < SEVERITY_RANK[Severity(other.text())]
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    closed = Signal()
+
+    def __init__(self, workspace=None):
         super().__init__()
-        self.setWindowTitle("ShenSec - Web Security Auditor")
-        self.resize(900, 700)
+        self.setWindowTitle("ShenSec — Security Regression Workbench")
+        self.resize(1320, 900)
+        self.workspace = workspace
+        self.demo_worker = self.demo_window = None
+        self._close_requested = False
 
         self.current_result: ScanResult | None = None
         
         self._init_ui()
+        toolbar = self.addToolBar("Get started")
+        toolbar.setMovable(False)
+        self.demo_action = toolbar.addAction("Try local demo", self.start_demo)
+        toolbar.addAction("User guide", self.open_guide)
+        toolbar.addAction("Open history folder", self.open_history_folder)
+
+    def open_guide(self):
+        guide = Path(__file__).resolve().parents[1] / "resources" / "desktop-guide.html"
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(guide)))
+
+    def open_history_folder(self):
+        root = self.workbench.workspace.root
+        root.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(root.resolve())))
+
+    def start_demo(self):
+        if self.demo_worker is not None:
+            if self.demo_window:
+                self.demo_window.showNormal()
+                self.demo_window.raise_()
+                self.demo_window.activateWindow()
+            return
+        from .demo_worker import DemoWorker
+        self.demo_action.setEnabled(False)
+        self.statusBar().showMessage("Preparing local demo: login, renew sessions, compare four roles…")
+        self.demo_worker = DemoWorker(self)
+        self.demo_worker.ready.connect(self._demo_ready)
+        self.demo_worker.error.connect(lambda text: self.statusBar().showMessage(text))
+        self.demo_worker.finished.connect(self._demo_finished)
+        self.demo_worker.start()
+
+    def _demo_ready(self, result):
+        if self._close_requested:
+            self.demo_worker.stop()
+            return
+        workspace, _, _, _ = result
+        self.demo_window = MainWindow(workspace=workspace)
+        self.demo_window.setWindowTitle("ShenSec — Local demo · temporary history")
+        self.demo_window.demo_action.setEnabled(False)
+        self.demo_window.closed.connect(self.demo_worker.stop)
+        self.demo_window.workbench.result_tabs.setCurrentWidget(self.demo_window.workbench.access_results)
+        self.demo_window.statusBar().showMessage("Demo only · 4 roles × 2 endpoints · 3 fixed access violations. Select the older run to compare. Closing this window removes demo data.")
+        self.demo_window.show()
+        self.statusBar().showMessage("Local demo is open in a separate window. Your projects stay in this workspace.")
+
+    def _demo_finished(self):
+        worker = self.demo_worker
+        self.demo_worker = self.demo_window = None
+        worker.deleteLater()
+        self.demo_action.setEnabled(True)
+        if self._close_requested:
+            QTimer.singleShot(0, self.close)
 
     def _init_ui(self):
         main_widget = QWidget()
@@ -56,6 +121,7 @@ class MainWindow(QMainWindow):
         jwt_layout.addWidget(QLabel("JWT Token:"))
         self.jwt_input = QLineEdit()
         self.jwt_input.setPlaceholderText("eyJhbGci...")
+        self.jwt_input.setEchoMode(QLineEdit.Password)
         jwt_layout.addWidget(self.jwt_input)
 
         self.btn_jwt_scan = QPushButton("Analyze JWT")
@@ -96,6 +162,10 @@ class MainWindow(QMainWindow):
         self.severity_filter.addItems(["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"])
         self.severity_filter.currentTextChanged.connect(self.apply_table_filter)
         filter_layout.addWidget(self.severity_filter)
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Search rule, title, evidence, or recommended action...")
+        self.search_input.textChanged.connect(self.apply_table_filter)
+        filter_layout.addWidget(self.search_input)
         filter_layout.addStretch()
         details_layout.addLayout(filter_layout)
 
@@ -105,7 +175,14 @@ class MainWindow(QMainWindow):
         self.table.setWordWrap(True)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.itemSelectionChanged.connect(self.show_finding_details)
         details_layout.addWidget(self.table)
+
+        self.finding_details = QPlainTextEdit()
+        self.finding_details.setReadOnly(True)
+        self.finding_details.setPlaceholderText("Select a finding to view its evidence and recommended action.")
+        self.finding_details.setMaximumHeight(165)
+        details_layout.addWidget(self.finding_details)
 
         main_layout.addWidget(details_group)
 
@@ -129,7 +206,11 @@ class MainWindow(QMainWindow):
         options_layout.addStretch()
         main_layout.addLayout(options_layout)
 
-        self.setCentralWidget(main_widget)
+        self.pages = QTabWidget()
+        self.workbench = Workbench(self.workspace, self)
+        self.pages.addTab(self.workbench, "Project workbench")
+        self.pages.addTab(main_widget, "Quick scan && JWT")
+        self.setCentralWidget(self.pages)
 
     def _set_ui_enabled(self, enabled: bool):
         self.btn_scan.setEnabled(enabled)
@@ -197,12 +278,11 @@ class MainWindow(QMainWindow):
 
     def on_jwt_finished(self, findings):
         QApplication.restoreOverrideCursor()
-        self.current_result = None # JWT uses a list, not ScanResult. Disable report generation for now.
-        self.lbl_risk.setText("JWT Analysis Complete")
-        self.lbl_counts.setText(f"Total Findings: {len(findings)}")
-        self.btn_export_html.setEnabled(False)
-        self.btn_export_json.setEnabled(False)
-        self.btn_export_md.setEnabled(False)
+        self.current_result = ScanResult(
+            target_url="local JWT", status_code=0, response_time_ms=0.0,
+            scan_kind="jwt", findings=findings, checks=["jwt"],
+        )
+        self._populate_overview()
         self._populate_table(findings)
         self._set_ui_enabled(True)
 
@@ -212,16 +292,48 @@ class MainWindow(QMainWindow):
         self.btn_export_html.setEnabled(False)
         self.btn_export_json.setEnabled(False)
         self.btn_export_md.setEnabled(False)
+        self.table.setRowCount(0)
+        self.finding_details.clear()
+        self.lbl_counts.setText("No complete result")
         QMessageBox.critical(self, "Scan Error", f"An error occurred:\n{error_msg}")
         self.lbl_risk.setText("Scan Failed")
         self._set_ui_enabled(True)
+
+    def closeEvent(self, event):
+        if self.workbench.is_running():
+            self.workbench.worker.finished.connect(self.close)
+            self.workbench.cancel()
+            event.ignore()
+            return
+        # Destroying a running QThread can abort the process.
+        for name in ("worker", "jwt_worker"):
+            worker = getattr(self, name, None)
+            if worker is not None and worker.isRunning():
+                self.statusBar().showMessage("Wait for the current inspection to finish before closing.")
+                event.ignore()
+                return
+        self.workbench.clear_session()
+        if self.demo_worker is not None and self.demo_worker.isRunning():
+            self._close_requested = True
+            if self.demo_window is not None:
+                self.demo_window.close()
+            else:
+                self.demo_worker.stop()
+            event.ignore()
+            return
+        self.closed.emit()
+        event.accept()
 
     def _populate_overview(self):
         if not self.current_result:
             return
 
         rating = self.current_result.risk_rating.value
-        self.lbl_risk.setText(f"Overall Risk: {rating}")
+        self.lbl_risk.setText(
+            f"Overall Risk: {rating}" if self.current_result.status == "complete"
+            else f"Scan {self.current_result.status.upper()} — observed risk: {rating}"
+        )
+        self.lbl_risk.setToolTip(self.current_result.error or '\n'.join(self.current_result.warnings))
         
         # Dark theme compatible colors for the Risk Label
         color_map = {
@@ -254,10 +366,12 @@ class MainWindow(QMainWindow):
         )
 
     def _populate_table(self, findings):
+        self.finding_details.clear()
         self.table.setSortingEnabled(False)
         self.table.setRowCount(len(findings))
         for row, f in enumerate(findings):
-            item_sev = QTableWidgetItem(f.severity.value)
+            item_sev = SeverityItem(f.severity.value)
+            item_sev.setData(Qt.UserRole, f)
             # Center the severity column just to be fancy
             item_sev.setTextAlignment(Qt.AlignCenter)
             item_id = QTableWidgetItem(f.rule_id)
@@ -290,19 +404,41 @@ class MainWindow(QMainWindow):
 
         self.table.resizeRowsToContents()
         self.table.setSortingEnabled(True)
+        self.apply_table_filter()
         if findings:
             self.table.selectRow(0)
             
 
     def apply_table_filter(self):
         target_sev = self.severity_filter.currentText().upper()
+        query = self.search_input.text().strip().casefold()
         for row in range(self.table.rowCount()):
             item_sev = self.table.item(row, 0)
             if item_sev:
-                if target_sev == "ALL" or item_sev.text().upper() == target_sev:
+                finding = item_sev.data(Qt.UserRole)
+                text = ' '.join(str(value or '') for value in (
+                    finding.rule_id, finding.title, finding.description,
+                    finding.evidence, finding.recommendation, finding.location,
+                )).casefold()
+                if (target_sev == "ALL" or item_sev.text().upper() == target_sev) and query in text:
                     self.table.setRowHidden(row, False)
                 else:
                     self.table.setRowHidden(row, True)
+
+    def show_finding_details(self):
+        row = self.table.currentRow()
+        item = self.table.item(row, 0) if row >= 0 else None
+        if item is None:
+            self.finding_details.clear()
+            return
+        finding = item.data(Qt.UserRole)
+        self.finding_details.setPlainText(
+            f"{finding.severity.value} · {finding.rule_id} · {finding.title}\n\n"
+            f"{finding.description}\n\n"
+            f"Evidence: {finding.evidence or 'Not recorded'}\n"
+            f"Location: {finding.location or 'Current target'}\n\n"
+            f"Recommended action: {finding.recommendation or 'Review in application context.'}"
+        )
 
     def export_html(self):
         if not self.current_result:

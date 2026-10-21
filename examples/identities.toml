@@ -1,0 +1,185 @@
+# ShenSec project. Credentials are environment references only.
+"schema_version" = 1
+"name" = "Staging role regression"
+"targets" = ["https://staging.example.com/api/admin", "https://staging.example.com/api/records/42"]
+"workers" = 4
+"timeout" = 10.0
+"check_options" = false
+"check_cors" = false
+"allow_cross_origin" = false
+"threshold" = "HIGH"
+"requests" = []
+"exceptions" = []
+
+["auth"]
+"profile" = "primary-admin"
+"required" = true
+"origins" = ["https://staging.example.com"]
+"allow_http" = false
+"verify_url" = "https://staging.example.com/me"
+"verify_status" = 200
+"verify_json_pointer" = "/account/id"
+"verify_json_value" = "admin-1"
+
+["auth"."login"]
+"url" = "https://staging.example.com/login"
+"encoding" = "json"
+"success_status" = 200
+"token_pointer" = "/access_token"
+"refresh_pointer" = "/refresh_token"
+"expires_pointer" = "/expires_in"
+"refresh_url" = "https://staging.example.com/refresh"
+"refresh_encoding" = "form"
+"refresh_field" = "refresh_token"
+"refresh_skew" = 30.0
+"max_renewals" = 3
+"csrf_field" = "csrf_token"
+
+["auth"."login"."fields_env"]
+"username" = "APP_ADMIN_USERNAME"
+"password" = "APP_ADMIN_PASSWORD"
+
+["network"]
+"requests_per_second" = 0.0
+"retries" = 1
+"backoff" = 0.5
+"max_retry_after" = 10.0
+
+[["roles"]]
+"name" = "admin"
+"anonymous" = false
+
+["roles"."auth"]
+"profile" = "admin"
+"required" = true
+"origins" = ["https://staging.example.com"]
+"allow_http" = false
+"verify_url" = "https://staging.example.com/me"
+"verify_status" = 200
+"verify_json_pointer" = "/account/id"
+"verify_json_value" = "admin-1"
+
+["roles"."auth"."login"]
+"url" = "https://staging.example.com/login"
+"encoding" = "json"
+"success_status" = 200
+"token_pointer" = "/access_token"
+"refresh_pointer" = "/refresh_token"
+"expires_pointer" = "/expires_in"
+"refresh_url" = "https://staging.example.com/refresh"
+"refresh_encoding" = "form"
+"refresh_field" = "refresh_token"
+"refresh_skew" = 30.0
+"max_renewals" = 3
+"csrf_field" = "csrf_token"
+
+["roles"."auth"."login"."fields_env"]
+"username" = "APP_ADMIN_USERNAME"
+"password" = "APP_ADMIN_PASSWORD"
+
+[["roles"]]
+"name" = "owner"
+"anonymous" = false
+
+["roles"."auth"]
+"profile" = "owner"
+"required" = true
+"origins" = ["https://staging.example.com"]
+"allow_http" = false
+"verify_url" = "https://staging.example.com/me"
+"verify_status" = 200
+"verify_json_pointer" = "/account/id"
+"verify_json_value" = "owner-42"
+
+["roles"."auth"."login"]
+"url" = "https://staging.example.com/login"
+"encoding" = "json"
+"success_status" = 200
+"token_pointer" = "/access_token"
+"refresh_pointer" = "/refresh_token"
+"expires_pointer" = "/expires_in"
+"refresh_url" = "https://staging.example.com/refresh"
+"refresh_encoding" = "form"
+"refresh_field" = "refresh_token"
+"refresh_skew" = 30.0
+"max_renewals" = 3
+"csrf_field" = "csrf_token"
+
+["roles"."auth"."login"."fields_env"]
+"username" = "APP_OWNER_USERNAME"
+"password" = "APP_OWNER_PASSWORD"
+
+[["roles"]]
+"name" = "other"
+"anonymous" = false
+
+["roles"."auth"]
+"profile" = "other"
+"required" = true
+"origins" = ["https://staging.example.com"]
+"allow_http" = false
+"verify_url" = "https://staging.example.com/me"
+"verify_status" = 200
+"verify_json_pointer" = "/account/id"
+"verify_json_value" = "other-7"
+
+["roles"."auth"."login"]
+"url" = "https://staging.example.com/login"
+"encoding" = "json"
+"success_status" = 200
+"token_pointer" = "/access_token"
+"refresh_pointer" = "/refresh_token"
+"expires_pointer" = "/expires_in"
+"refresh_url" = "https://staging.example.com/refresh"
+"refresh_encoding" = "form"
+"refresh_field" = "refresh_token"
+"refresh_skew" = 30.0
+"max_renewals" = 3
+"csrf_field" = "csrf_token"
+
+["roles"."auth"."login"."fields_env"]
+"username" = "APP_OTHER_USERNAME"
+"password" = "APP_OTHER_PASSWORD"
+
+[["roles"]]
+"name" = "anonymous"
+"anonymous" = true
+
+["roles"."auth"]
+"profile" = "default"
+"required" = false
+"origins" = []
+"allow_http" = false
+"verify_status" = 200
+
+[["permissions"]]
+"id" = "admin_only"
+"title" = "Admin dashboard"
+"url" = "https://staging.example.com/api/admin"
+"method" = "GET"
+"allow_status" = [200]
+"deny_status" = [401, 403]
+"json_pointer" = "/resource"
+"json_value" = "admin-dashboard"
+
+["permissions"."expectations"]
+"admin" = "allow"
+"owner" = "deny"
+"other" = "deny"
+"anonymous" = "deny"
+
+[["permissions"]]
+"id" = "record_owner"
+"title" = "Record 42 ownership"
+"url" = "https://staging.example.com/api/records/42"
+"method" = "GET"
+"allow_status" = [200]
+"deny_status" = [401, 403]
+"json_pointer" = "/record/id"
+"json_value" = 42
+
+["permissions"."expectations"]
+"admin" = "allow"
+"owner" = "allow"
+"other" = "deny"
+"anonymous" = "deny"

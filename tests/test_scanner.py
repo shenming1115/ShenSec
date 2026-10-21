@@ -5,7 +5,7 @@ from shensec.scanner.jwt import analyze_jwt
 
 def test_analyze_headers_missing_all():
     # Mocking an empty response header
-    response = httpx.Response(200, request=httpx.Request("GET", "http://test"))
+    response = httpx.Response(200, request=httpx.Request("GET", "https://test"))
     findings = analyze_headers(response)
     
     # We expect 6 HTTP headers to be missing
@@ -27,7 +27,7 @@ def test_analyze_headers_present():
         "Referrer-Policy": "strict-origin-when-cross-origin",
         "Permissions-Policy": "geolocation=(), camera=()"
     }
-    response = httpx.Response(200, headers=headers, request=httpx.Request("GET", "http://test"))
+    response = httpx.Response(200, headers=headers, request=httpx.Request("GET", "https://test"))
     findings = analyze_headers(response)
     
     # No findings if all headers are present and properly configured
@@ -95,27 +95,24 @@ def test_scan_target_network_error():
     assert result.status_code == 0
     assert len(result.findings) == 1
     assert result.findings[0].rule_id == "SEC-SCAN-ERR"
-    assert result.risk_rating == Severity.CRITICAL
+    assert result.status == "error"
+    assert result.error
+    assert result.risk_rating == Severity.INFO
 
 def test_scan_target_aggregation(monkeypatch):
-    def mock_get(*args, **kwargs):
-         headers = {
-            "Server": "nginx/1.18.0",
-            "Access-Control-Allow-Origin": "*",
-            "Allow": "GET, POST, OPTIONS, PUT, DELETE"
-         }
-         return httpx.Response(200, headers=headers, request=httpx.Request("GET", "http://test"))
-         
-    def mock_options(*args, **kwargs):
-         headers = {
-            "Allow": "GET, POST, OPTIONS, PUT, DELETE"
-         }
-         return httpx.Response(200, headers=headers, request=httpx.Request("OPTIONS", "http://test"))
-         
-    monkeypatch.setattr(httpx, "get", mock_get)
-    monkeypatch.setattr(httpx, "options", mock_options)
+    original_client = httpx.Client
+    def handler(request):
+        return httpx.Response(200, headers={
+            "Server": "nginx/1.18.0", "Access-Control-Allow-Origin": "*",
+            "Allow": "GET, POST, OPTIONS, PUT, DELETE",
+        })
+    monkeypatch.setattr(httpx, "Client", lambda **kwargs: original_client(
+        transport=httpx.MockTransport(handler), **kwargs,
+    ))
     
     result = scan_target("http://test")
     
     assert result.severity_counts[Severity.MEDIUM.value] >= 1
+    assert result.status == "complete"
+    assert any(f.rule_id == "SEC-HTTP-METHODS" for f in result.findings)
     assert result.response_time_ms >= 0

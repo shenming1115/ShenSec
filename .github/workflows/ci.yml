@@ -9,7 +9,11 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     env:
       QT_QPA_PLATFORM: offscreen
     steps:
@@ -18,9 +22,14 @@ jobs:
         with:
           enable-cache: true
       - name: Install Qt runtime libraries
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libegl1 libopengl0
       - run: uv sync --locked --extra gui
       - run: uv run --locked pytest
       - run: uv run --locked python -c "import shensec; import shensec.gui.app; print(shensec.__version__)"
       - run: uv run --locked shensec --help
       - run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shensec-${{ runner.os }}
+          path: dist/*

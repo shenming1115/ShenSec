@@ -1,0 +1,22 @@
+{% macro finding_card(finding) %}
+<article class="finding severity-{{ finding.severity.value }}">
+  <h3>{{ finding.title }} <span class="badge">{{ finding.severity.value }}</span></h3>
+  <p class="muted">{{ finding.rule_id }}{% if finding.location %} · {{ finding.location }}{% endif %}</p>
+  <p>{{ finding.description }}</p>
+  {% if finding.suppression %}<p class="notice"><strong>Accepted exception:</strong> {{ finding.suppression }}</p>{% endif %}
+  {% if finding.evidence %}<pre>{{ finding.evidence }}</pre>{% endif %}
+  {% if finding.recommendation %}<p class="fix"><strong>Recommended action</strong><br>{{ finding.recommendation }}</p>{% endif %}
+</article>
+{% endmacro %}
+
+{% macro scan_details(scan) %}
+<p class="target-url"><strong>Target:</strong> {{ scan.target_url }}</p>
+{% if scan.final_url %}<p class="target-url muted">Final URL: {{ scan.final_url }}</p>{% endif %}
+<p class="muted">Status: {{ scan.status | upper }} · HTTP {{ scan.status_code }} · {{ scan.response_time_ms }} ms · Risk {{ scan.risk_rating.value }}</p>
+<p class="muted">Method: {{ scan.request_method }} · Authentication: {{ scan.authentication }} · Requests: {{ scan.request_count }} · Retries: {{ scan.retry_count }}</p>
+{% if scan.error %}<div class="notice error"><strong>Execution error</strong><br>{{ scan.error }}</div>{% endif %}
+{% for warning in scan.warnings %}<div class="notice">{{ warning }}</div>{% endfor %}
+{% if scan.redirect_chain %}<p class="muted target-url">Redirects: {{ scan.redirect_chain | join(' → ') }}</p>{% endif %}
+<div class="counts">{% for severity, count in scan.severity_counts.items() | reverse %}<span>{{ severity }}: {{ count }}</span>{% endfor %}</div>
+{% for finding in scan.findings | by_severity %}{{ finding_card(finding) }}{% else %}<p>No findings from completed checks. This is not a guarantee of application security.</p>{% endfor %}
+{% endmacro %}

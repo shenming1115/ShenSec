@@ -1,13 +1,36 @@
 import httpx
-from ..models import ScanResult, Finding, Severity
+import re
+from ..models import Finding, Severity
 
 def analyze_headers(response: httpx.Response) -> list[Finding]:
     findings = []
     
     headers = {k.lower(): v.lower() for k, v in response.headers.items()}
+    media_type = headers.get("content-type", "").split(";", 1)[0].strip()
+    is_document = media_type in ("", "text/html", "application/xhtml+xml")
+    csp = headers.get("content-security-policy", "")
+    # Browsers use the first occurrence of each directive.
+    csp_directives = {}
+    for part in csp.split(";"):
+        tokens = part.strip().split()
+        if tokens:
+            csp_directives.setdefault(tokens[0], tokens[1:])
+    ancestors = csp_directives.get("frame-ancestors", [])
+    framing_restricted = bool(ancestors) and all(
+        token in {"'none'", "'self'"} or ("*" not in token and ("." in token or "://" in token))
+        for token in ancestors
+    )
     
     # 1. HSTS (Strict-Transport-Security)
-    if "strict-transport-security" not in headers:
+    if response.url.scheme == "http":
+        findings.append(Finding(
+            rule_id="SEC-TRANSPORT-HTTP", title="Unencrypted HTTP Endpoint",
+            description="The final response uses HTTP; request and response data are unencrypted.",
+            severity=Severity.MEDIUM,
+            recommendation="Serve the endpoint over HTTPS and redirect HTTP traffic to HTTPS.",
+            evidence="Final response scheme: http",
+        ))
+    elif "strict-transport-security" not in headers:
         findings.append(Finding(
             rule_id="SEC-HDR-001",
             title="Missing Strict-Transport-Security Header",
@@ -17,11 +40,12 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
         ))
     else:
         hsts_val = headers["strict-transport-security"]
-        if "max-age=" not in hsts_val:
+        max_ages = re.findall(r"(?:^|;)\s*max-age\s*=\s*(\d+)\s*(?=;|$)", hsts_val)
+        if len(max_ages) != 1 or not max_ages[0].strip('0'):
             findings.append(Finding(
                 rule_id="SEC-HDR-HSTS-WEAK",
                 title="Weak HSTS Configuration",
-                description="The HSTS header is missing a 'max-age' directive.",
+                description="HSTS requires a single positive max-age directive; missing, zero, or invalid values disable protection.",
                 severity=Severity.MEDIUM,
                 recommendation="Configure 'max-age' to a value like 31536000 (1 year)."
             ))
@@ -35,7 +59,7 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
             ))
 
     # 2. X-Frame-Options
-    if "x-frame-options" not in headers:
+    if is_document and "x-frame-options" not in headers and not framing_restricted:
         findings.append(Finding(
             rule_id="SEC-HDR-002",
             title="Missing X-Frame-Options Header",
@@ -43,7 +67,7 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
             severity=Severity.MEDIUM,
             recommendation="Set X-Frame-Options to DENY or SAMEORIGIN."
         ))
-    else:
+    elif is_document and "x-frame-options" in headers:
         xfo_val = headers["x-frame-options"]
         if xfo_val not in ["deny", "sameorigin"]:
             findings.append(Finding(
@@ -55,7 +79,7 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
             ))
         
     # 3. Content-Security-Policy (CSP)
-    if "content-security-policy" not in headers:
+    if is_document and "content-security-policy" not in headers:
         findings.append(Finding(
             rule_id="SEC-HDR-003",
             title="Missing Content-Security-Policy Header",
@@ -63,7 +87,7 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
             severity=Severity.HIGH,
             recommendation="Implement a strict CSP restricting unauthorized resources."
         ))
-    else:
+    elif is_document:
         csp_val = headers["content-security-policy"]
         if "unsafe-inline" in csp_val or "unsafe-eval" in csp_val:
             findings.append(Finding(
@@ -83,7 +107,7 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
             severity=Severity.MEDIUM,
             recommendation="Add the 'X-Content-Type-Options: nosniff' header."
         ))
-    elif "nosniff" not in headers["x-content-type-options"]:
+    elif headers["x-content-type-options"].strip() != "nosniff":
         findings.append(Finding(
             rule_id="SEC-HDR-CTO-WEAK",
             title="Incomplete X-Content-Type-Options",
@@ -113,7 +137,7 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
             ))
         
     # 6. Permissions-Policy
-    if "permissions-policy" not in headers:
+    if is_document and "permissions-policy" not in headers:
         findings.append(Finding(
             rule_id="SEC-HDR-006",
             title="Missing Permissions-Policy Header",
@@ -122,4 +146,15 @@ def analyze_headers(response: httpx.Response) -> list[Finding]:
             recommendation="Add Permissions-Policy to restrict features like geolocation, camera, or microphone if unused."
         ))
             
+    for finding in findings:
+        if finding.evidence is None:
+            header_name = {
+                "SEC-HDR-001": "strict-transport-security", "SEC-HDR-HSTS-WEAK": "strict-transport-security",
+                "SEC-HDR-HSTS-NOSUB": "strict-transport-security", "SEC-HDR-002": "x-frame-options",
+                "SEC-HDR-XFO-WEAK": "x-frame-options", "SEC-HDR-003": "content-security-policy",
+                "SEC-HDR-CSP-WEAK": "content-security-policy", "SEC-HDR-004": "x-content-type-options",
+                "SEC-HDR-CTO-WEAK": "x-content-type-options", "SEC-HDR-005": "referrer-policy",
+                "SEC-HDR-RP-WEAK": "referrer-policy", "SEC-HDR-006": "permissions-policy",
+            }.get(finding.rule_id)
+            finding.evidence = f"{header_name}: {response.headers.get(header_name, '<absent>')}" if header_name else None
     return findings

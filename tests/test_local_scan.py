@@ -25,3 +25,19 @@ def test_local_scan_and_reports(monkeypatch):
     assert json.loads(generate_report(result, "json"))["status_code"] == 200
     assert "SEC-COOKIE-001" in generate_report(result, "markdown")
     assert "<title>ShenSec Audit Report</title>" in generate_report(result, "html")
+
+
+def test_real_baseline_fix_compare_workflow(monkeypatch):
+    monkeypatch.setenv("NO_PROXY", "127.0.0.1,localhost")
+    example = Path(__file__).resolve().parents[1] / "examples" / "regression_demo.py"
+    spec = importlib.util.spec_from_file_location("regression_demo", example)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    baseline, current = module.run_demo()
+    assert baseline.gate.outcome == "failed"
+    assert current.gate.outcome == "passed"
+    assert current.failed_targets == 0
+    assert len(current.comparison.resolved) >= 5
+    assert not current.comparison.unverified
+    assert {r.finding.rule_id for r in current.comparison.new} == {"SEC-HTTP-METHODS"}
+    assert current.severity_counts["HIGH"] == 0

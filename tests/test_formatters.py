@@ -1,4 +1,6 @@
-from shensec.models import ScanResult, Finding, Severity
+from shensec.models import AuditResult, ScanResult, Finding, Severity
+from shensec.audit import compare_audits, evaluate_gate
+import json
 from shensec.reporting.formatters import generate_report
 
 def get_mock_result():
@@ -36,6 +38,43 @@ def test_markdown_formatter():
     assert "**Overall Risk Rating**: **HIGH**" in output
     assert "HIGH: 1" in output
     assert "### 1. A test finding (HIGH)" in output
+
+
+def test_html_escapes_all_target_controlled_fields():
+    payload = '<script>alert("report injection")</script>'
+    result = ScanResult(
+        target_url=payload, final_url=payload, status_code=200, response_time_ms=1,
+        error=payload, warnings=[payload], redirect_chain=[payload],
+        findings=[Finding(rule_id=payload, title=payload, description=payload,
+                          severity=Severity.HIGH, recommendation=payload, evidence=payload, location=payload)],
+    )
+    for report in (result, AuditResult(results=[result])):
+        output = generate_report(report, "html")
+        assert payload not in output
+        assert "&lt;script&gt;" in output
+        assert 'Content-Security-Policy' in output
+        assert 'src="http' not in output
+
+
+def test_markdown_does_not_emit_active_html_or_injected_links():
+    result = get_mock_result()
+    result.findings[0].description = '<img src=x onerror=alert(1)> [click](javascript:alert(1))'
+    output = generate_report(result, "markdown")
+    assert "<img" not in output
+    assert "\\[click\\]\\(javascript:" in output
+
+
+def test_batch_reports_contain_comparison_and_policy_decision():
+    baseline = AuditResult(results=[get_mock_result()])
+    current = AuditResult(results=[get_mock_result()])
+    current.results[0].findings.clear()
+    current.comparison = compare_audits(current, baseline)
+    current.gate = evaluate_gate(current, only_new=True)
+    assert json.loads(generate_report(current, "json"))["gate"]["outcome"] == "passed"
+    assert "Resolved: 1" in generate_report(current, "markdown")
+    html = generate_report(current, "html")
+    assert "Resolved · 1" in html
+    assert "Security regression report" in html
 
 def test_html_formatter():
     result = get_mock_result()

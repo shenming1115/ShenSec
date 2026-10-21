@@ -49,3 +49,10 @@ result.html
 .venv-*/
 .uv-cache/
 .ruff_cache/
+examples/demo-output/
+shensec-demo/
+.shensec/
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm

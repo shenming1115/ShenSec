@@ -1,139 +1,143 @@
 # ShenSec
 
-**A lightweight defensive web security auditing toolkit for developers.**
+**Catch web security and access regressions before deployment.**
+
+An API security workbench with automatic login, session renewal, verified role comparisons, local history, baselines and CI gates. Review what changed without saving passwords or tokens in reports.
 
 [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-blue)](pyproject.toml)
-[![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Local tests: 26 passed](https://img.shields.io/badge/Local_tests-26_passed-brightgreen)](tests/)
-[![Version 0.2.1](https://img.shields.io/badge/Version-0.2.1-blue)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-0.5.0b1-teal)](CHANGELOG.md)
+[![Tests](https://github.com/shenming1115/ShenSec/actions/workflows/ci.yml/badge.svg)](https://github.com/shenming1115/ShenSec/actions/workflows/ci.yml)
+[![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)](https://github.com/shenming1115/ShenSec/releases/tag/v0.5.0b1)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Review **HTTP security headers, cookie flags, CORS, JWTs, and server information exposure** in systems you own or are authorized to assess. ShenSec turns focused configuration checks into structured findings with severity levels and remediation suggestions.
+[简体中文](README.zh-CN.md) · [Windows tutorial](docs/windows-guide.zh-CN.md) · [Authentication guide](docs/authentication.md) · [CI integration](docs/ci.md)
 
-Use the **Typer CLI**, **reusable Python API**, or **PySide6 GUI** and export URL scan results as **Markdown, JSON, or HTML**.
+## Download and double-click
 
-## Quick start
+**Windows 10/11 x64 — no Python, uv, terminal or administrator rights required.**
 
-Requires Python 3.13+ and uv. From a checkout of [shenming1115/ShenSec](https://github.com/shenming1115/ShenSec), with a local service listening on port 8000:
+1. Download the [standalone exe](https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64.exe) and double-click it.
+2. Click **Try local demo** to explore login, renewal, four roles, history and baseline comparisons using a real local fixture.
+3. Click **+ New** to configure your own project. **User guide** opens offline instructions from the toolbar.
+
+For faster daily startup, use the [portable ZIP](https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64-portable.zip): extract everything, then open `ShenSec.exe`. Keep `_internal` alongside it. Both downloads are available on the [release page](https://github.com/shenming1115/ShenSec/releases/tag/v0.5.0b1), with SHA-256 checksums. This beta is unsigned; Windows may show an unknown-publisher prompt. Verify the official download and checksum before following your device's policy.
+
+The demo runs in a separate temporary workspace, scans an authenticated loopback application before and after hardening, and opens populated history. It needs no production account or token. Select either run, inspect evidence, rescan and export reports. Closing its window stops the fixture and removes demo data.
+
+![Real login and role comparison workbench showing unexpected access in a controlled fixture](docs/permissions-workbench.png)
+
+The identity fixture checks **4 roles × 2 endpoints**, resolves **3 unexpected access observations**, and verifies **4 session renewals** in the post-fix run. The screenshot shows the controlled pre-fix state. HTTP transport observations remain because the fixture uses loopback HTTP. See [screenshots and reproducibility](docs/screenshots.md).
+
+New in 0.5: **automatic JSON/form login, CSRF support, session renewal, verified role comparisons, a permission matrix and guided desktop setup**. Passwords and tokens stay in memory. [Identity workflows and examples](docs/identity-workflows.md).
+
+API features: **OpenAPI import, explicit API requests, active CORS checks, per-origin pacing, safe retries, expiring exceptions and SARIF**. Configure these in the desktop tabs or shared TOML/JSON projects. See [API workflows](docs/api-workflows.md) for examples and supported boundaries. The built-in demo includes authenticated POST and CORS checks.
+
+## Use it every day
+
+Open the exe; projects and history persist across launches. The source launchers `ShenSec.cmd` and `shensec.sh` remain available for development with uv. Linux/macOS users currently run from source.
+
+1. Create a project and paste/import your endpoint URLs.
+2. Configure Bearer, session Cookie, or API-key/header environment references. You can also paste masked session credentials; they stay in memory until you switch projects, clear them, or close the app.
+3. Run the audit and inspect the evidence and recommended actions. Accept a complete reviewed run as the baseline.
+4. Scan again. New issues, severity increases, fixes, and unverified observations are tracked separately. Prioritize actionable changes or search across targets, evidence, and recommendations.
+
+![Guided automatic login and identity verification](docs/login-workbench.png)
+
+![Session state and renewal activity for each identity](docs/sessions-workbench.png)
+
+Projects and indexed scan history live in `~/.shensec/workspace.sqlite3`. Use `--workspace PATH` or `SHENSEC_HOME` to choose another location. Configuration exports contain environment variable names, not credential values. Response Cookie changes remain isolated between target scans, while automatic login shares a verified seed session and single-flight renewal per identity. HTTP clients are reused per worker.
+
+| Capability | What you get |
+| --- | --- |
+| Authenticated endpoints | Bearer, Cookie and custom header/API-key credentials; exact origin scope; optional session verification URL and success header |
+| Project workbench | Bulk URL import, saved configuration, persistent history, baseline selection, text/severity/change filters |
+| Feedback and control | Per-target progress, cooperative cancellation, explicit failed/partial/cancelled states, preserved partial results |
+| Repeatable audits | Stable issue identities; new/existing/resolved/regressed/unverified comparisons; authentication context change detection |
+| Automation | CLI/API, reusable TOML/JSON configs, clean JSON stdout, severity and new-issue gates |
+| Shareable evidence | Escaped offline HTML, Markdown and JSON; severity sorting; cookie and credential redaction |
+| Efficient execution | Bounded scheduling, 1–16 workers, per-worker HTTP client reuse, indexed history, lazy Qt findings table |
+
+## CLI: authenticated audits and CI
 
 ```bash
-uv sync --locked
-uv run shensec scan http://127.0.0.1:8000
+# Create a shareable project; APP_TOKEN is an environment variable NAME.
+uv run shensec init --name "Staging API" --target https://your-app.example/api/me --bearer-env APP_TOKEN
+
+# Set APP_TOKEN in your process environment using your usual secret-management workflow.
+uv run shensec audit --config shensec.toml --format json --output baseline.json
+
+# On subsequent deployments, gate new HIGH/CRITICAL issues and severity increases.
+uv run shensec audit --config shensec.toml --baseline baseline.json --only-new --fail-on HIGH --format json --output current.json
+
+# Use the same project/history store as the desktop app.
+uv run shensec project import shensec.toml
+uv run shensec project list
+uv run shensec audit --project PROJECT_ID --format json
+uv run shensec history PROJECT_ID
+uv run shensec baseline PROJECT_ID RUN_ID
+uv run shensec history PROJECT_ID --run RUN_ID --format html --output audit.html
 ```
 
-Need a local target? Run `uv run python -m http.server 8000 --bind 127.0.0.1` in a separate terminal first. Stop it when finished.
+`audit --project` saves history and uses that project's accepted baseline automatically. `audit --config` is stateless for CI. Explicit URLs/`--targets` replace a configuration's URL list. Workers, timeout, and severity options override project settings.
 
-The same scan from Python, using the project's environment:
+| Exit | Meaning |
+| --- | --- |
+| `0` | All requested coverage completed and the policy passed |
+| `1` | Findings met or exceeded the selected severity threshold |
+| `2` | Invalid input, authentication/execution/output error, cancellation, or incomplete coverage |
+
+`audit` defaults to HIGH. `scan` and `jwt` fail on findings only when `--fail-on` is supplied. Progress goes to stderr; JSON stdout remains parseable. A severity gate can fail while still writing a valid initial baseline report. Review that report before accepting it.
+
+Removed targets, missing checks, changed authentication contexts, and failed scans cannot silently become fixes. See [coverage and compatibility](docs/limitations.md) and [CI report retention](docs/ci.md).
+
+## Focused inspections
+
+```bash
+uv run shensec scan https://your-app.example --format html --output report.html
+uv run shensec jwt --token-file token.txt --format json
+uv run shensec demo --output-dir demo-reports
+uv run shensec --help
+```
+
+Current checks cover transport/HSTS, CSP and framing headers, MIME/referrer/permissions policies, cookie flags, wildcard CORS, server/framework exposure, infrastructure indicators, and advertised HTTP methods. Local JWT inspection covers structure/types, algorithms, expiration, key references, and sensitive claim heuristics. JWT signatures and server acceptance are not verified.
+
+Default HTTP scans use GET and optional OPTIONS. Explicit request plans support GET/HEAD/POST/PUT/PATCH/DELETE; advertised methods are never executed automatically. Optional Origin probes apply to GET/HEAD only. The tool does not crawl, fuzz or exploit targets. HTML-specific controls are skipped for explicit API content types. Findings are observations that require application context.
+
+## Performance you can reproduce
+
+```bash
+uv run python examples/benchmark.py --targets 24 --rounds 3 --workers 4
+```
+
+One Windows/Python 3.13.3 loopback run measured a **5.30×** improvement from per-worker client reuse: median **7307.74 → 1379.49 ms**, **24 → 4 TCP connections**, identical findings. This compares client-creation strategies on a small authenticated HTTP/1.1 fixture; it is not a general internet-scan speed guarantee. [Method and raw sample](docs/performance.md).
+
+Small declared uncompressed bodies up to 16 KiB may be drained without being retained, allowing connection reuse. Large, encoded, and unknown-length bodies are closed without downloading them. Concurrency is bounded and cancellation stops new scheduling; in-flight requests finish within their configured operation timeout.
+
+## Python API and architecture
 
 ```python
-from shensec import scan_target
+from shensec import Workspace, audit_project, load_project
 
-result = scan_target("http://127.0.0.1:8000", timeout=5.0)
-print(result.risk_rating.value)
+config = load_project("shensec.toml")
+workspace = Workspace()
+project_id = workspace.save_project(config)
+result = audit_project(config, baseline=workspace.baseline(project_id))
+run_id = workspace.save_run(project_id, config, result)
+print(result.gate.outcome)
 ```
 
-For a self-contained demonstration that starts and stops its own localhost target, run `uv run python examples/local_scan.py`.
-
-![ShenSec CLI scan against a controlled localhost target](docs/cli_demo.png)
-
-## Example result
-
-Abbreviated example output from the [controlled localhost sample report](examples/report.md):
-
-```text
-Risk Rating: HIGH
-
-Findings (selected):
-- Missing Strict-Transport-Security Header
-- Cookie without HttpOnly flag: session
-- Permissive CORS Policy
-```
-
-The full report includes rule IDs, severity counts, descriptions, and recommendations. These are demonstration findings, not an assessment of an external website.
-
-## What it checks
-
-| Capability | Implemented checks |
+| Module | Responsibility |
 | --- | --- |
-| HTTP security headers | HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy; selected weak values and missing directives |
-| Cookie flags | Missing Secure, HttpOnly, or SameSite; SameSite=None without Secure |
-| CORS | Wildcard `Access-Control-Allow-Origin: *` for contextual review |
-| JWT inspection | Structure, decoding, algorithm and expiration checks, suspicious key references, and sensitive-claim heuristics; no signature verification |
-| Server information exposure | Server and X-Powered-By headers, plus basic WAF/CDN header heuristics |
+| `auth.py`, `project.py` | Scoped runtime credentials, redaction, portable validated project configuration |
+| `scanner/` | HTTP transport, contextual header/cookie rules, local JWT inspection |
+| `audit.py`, `models.py` | Bounded batch scheduling, progress/cancellation, comparisons, gates and derived summaries |
+| `workspace.py` | Transactional SQLite projects, indexed history and accepted baselines |
+| `gui/` | Background workers, project workflow, lazy table models, quick scan/JWT pages |
+| `reporting/`, `templates/`, `cli.py` | Reports and command-line workflows |
 
-HTTP scans send a GET request, follow redirects, and send OPTIONS to inspect the Allow header. They flag advertised PUT, DELETE, or TRACE methods without executing them.
+Existing `scan_target`, `analyze_response`, `analyze_jwt`, and `generate_report` APIs remain available. [Chinese project analysis](docs/project-direction.zh-CN.md) includes the development direction.
 
-## What this project demonstrates
-
-- **Python package architecture:** a `src/` layout separating analysis, interfaces, and reporting.
-- **HTTP/security analysis:** focused rules for response headers, cookies, and local token inspection.
-- **Typed structured data models:** Pydantic `Finding` and `ScanResult` models with severity levels.
-- **CLI/API/GUI interface design:** shared functionality across Typer, Python, and PySide6.
-- **Automated testing:** 26 passing local tests, including offscreen GUI and localhost integration tests.
-- **Report generation:** Markdown, JSON, and template-based HTML from structured results.
-- **Defensive security design:** bounded configuration checks with explicit limitations.
-
-## Architecture
-
-```mermaid
-flowchart TD
-    CLI[Typer CLI] --> Core[Scanner Core]
-    API[Python API] --> Core
-    GUI[PySide6 GUI] --> Core
-    Core --> Headers[Headers]
-    Core --> Cookies[Cookies]
-    Core --> CORS[CORS]
-    Core --> Server[Server Exposure]
-    Core --> Methods[HTTP Method Headers]
-    Headers --> Result[Structured ScanResult]
-    Cookies --> Result
-    CORS --> Result
-    Server --> Result
-    Methods --> Result
-    CLI --> JWT[Local JWT Inspection]
-    API --> JWT
-    GUI --> JWT
-    JWT --> Findings[Finding list]
-    Findings -. CLI appends to HTTP result .-> Result
-    Result --> Reports[Markdown / JSON / HTML Reporting]
-```
-
-`scanner/core.py` orchestrates HTTP analysis and contains the CORS, server exposure, and method checks. Headers, cookies, and JWT rules have separate modules. JWT inspection returns a finding list; the GUI displays it separately and disables standalone JWT report export.
-
-| Location | Responsibility |
-| --- | --- |
-| [src/shensec/](src/shensec/) | Public exports, API, CLI, and Pydantic models |
-| [scanner/](src/shensec/scanner/) | HTTP and JWT analysis |
-| [gui/](src/shensec/gui/) | Desktop interface and background workers |
-| [reporting/](src/shensec/reporting/) and [templates/](src/shensec/templates/) | Report formatters and packaged HTML template |
-| [tests/](tests/) and [examples/](examples/) | Regression tests and runnable examples |
-
-## Reports and API usage
-
-Export a report or inspect the CLI options:
-
-```bash
-uv run shensec scan http://127.0.0.1:8000 --format html --output result.html
-uv run shensec scan --help
-```
-
-Use `--format json --output result.json` for machine-readable output; the console also prints progress messages. Markdown is the default format. `--jwt TOKEN` adds local token inspection to a URL scan.
-
-In Python, `generate_report(result, "markdown")` returns report text. `analyze_response(response, url=...)` analyzes an existing HTTPX response without network requests, and `analyze_jwt(token)` returns local token findings. See the [offline API example](examples/basic_usage.py).
-
-Summary caveat: `analyze_response` does not aggregate severity counts or risk. `scan_target` does, but the CLI's subsequently appended JWT findings do not update that summary. See [known limitations](docs/limitations.md).
-
-## GUI
-
-```bash
-uv sync --locked --extra gui
-uv run shensec gui
-```
-
-The PySide6 desktop interface provides URL scans, local JWT inspection, a sortable findings table, severity filtering, and report export for URL scans. Interactive use requires a desktop display.
-
-![ShenSec GUI showing a successful controlled localhost scan](docs/gui_dashboard.png)
-
-## Testing and building
+## Development and verification
 
 ```bash
 uv sync --locked --extra gui
@@ -141,26 +145,18 @@ uv run pytest
 uv build
 ```
 
-For headless GUI tests, set `QT_QPA_PLATFORM=offscreen` before pytest (`$env:QT_QPA_PLATFORM = "offscreen"` in PowerShell). Without the GUI extra, GUI tests are skipped.
+To launch from source, run `uv run --locked --extra gui shensec gui`. To build both Windows distributions on a Windows x64 host:
 
-The [GitHub Actions workflow](.github/workflows/ci.yml) is configured to run tests offscreen, check imports and CLI help, and build the package. The badge above records the verified local result; a remote CI run has not yet been verified. Build artifacts go to `dist/`; see [release verification](RELEASE.md).
+```powershell
+uv sync --locked --extra gui --group build
+uv run --locked --group build python scripts/build_windows.py
+```
 
-## Security scope and limitations
+See [release verification](RELEASE.md) for packaged-runtime checks and the automated Windows release workflow. Build tools are only needed by contributors.
 
-Use ShenSec only on authorized systems, including redirect destinations. It does not crawl sites, exploit vulnerabilities, fuzz inputs, brute-force credentials, or execute injection attacks.
+Set `QT_QPA_PLATFORM=offscreen` for headless GUI tests. The local suite covers authenticated real HTTP requests, connection reuse, credential isolation/redaction, cancellation, history restart, baseline rules, report injection, and a 5000-finding Qt model. GUI tests are skipped if the extra is absent. CI is configured for Windows, Linux and macOS; remote runs must be verified after pushing.
 
-Findings are heuristics that require context: wildcard CORS and advertised HTTP methods can be legitimate, and JWT inspection does not verify signatures or prove server acceptance. A low rating is not proof of application security.
-
-Connection failures are reported as `SEC-SCAN-ERR` with status code `0`; CLI exit status alone does not establish scan success. HTML reports currently do not escape target-controlled text, so review them before opening or sharing. See [known limitations](docs/limitations.md) for details.
-
-## Roadmap
-
-- Expand edge-case coverage and improve contextual findings.
-- Make risk summaries consistent across HTTP and JWT analysis.
-- Escape untrusted report text and clarify machine-readable CLI outcomes.
-- Improve GUI accessibility.
-
-Suggestions and bug reports are welcome through [GitHub Issues](https://github.com/shenming1115/ShenSec/issues).
+See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), and [release verification](RELEASE.md). Use only systems and redirect destinations you are authorized to assess.
 
 ## License
 

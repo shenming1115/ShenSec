@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>ShenSec Audit Report</title>
+  <style>
+    :root { color-scheme: dark; --bg: #10151e; --panel: #192231; --line: #304057; --text: #e3eaf4; --muted: #aab9cf; --accent: #69dbc8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.65 system-ui, sans-serif; }
+    main { max-width: 1100px; padding: 48px 28px; margin: auto; }
+    h1 { font-size: clamp(28px, 4vw, 42px); line-height: 1.15; margin: 12px 0 20px; letter-spacing: -1px; }
+    h2 { margin-top: 36px; font-size: 23px; } h3 { margin-top: 0; font-size: 17px; }
+    .eyebrow { color: var(--accent); letter-spacing: 3px; font-size: 12px; font-weight: 700; }
+    .muted, footer { color: var(--muted); } footer { margin-top: 40px; font-size: 13px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; margin: 24px 0; }
+    .card, .finding, details, .notice { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+    .card strong { display: block; font-size: 24px; } .card span { color: var(--muted); }
+    .finding { margin: 14px 0; border-left: 4px solid var(--line); overflow-wrap: anywhere; }
+    .severity-CRITICAL { border-left-color: #ff747b; } .severity-HIGH { border-left-color: #ffb66c; }
+    .severity-MEDIUM { border-left-color: #ead06a; } .severity-LOW { border-left-color: #69b8ff; }
+    .severity-INFO { border-left-color: var(--accent); }
+    .badge { display: inline-block; font-size: 11px; letter-spacing: 1px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 5px; vertical-align: middle; }
+    .notice { border-color: #ffb66c; margin: 16px 0; } .error { color: #ffb0b4; }
+    pre { padding: 12px; background: var(--bg); white-space: pre-wrap; overflow-wrap: anywhere; border-radius: 5px; font-size: 13px; }
+    .fix { border-top: 1px solid var(--line); padding-top: 12px; color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+    .table-wrap { overflow-x: auto; } summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+    details { margin: 12px 0; } .target-url { overflow-wrap: anywhere; }
+    .counts { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0; color: var(--muted); }
+    @media print { :root { color-scheme: light; --bg: white; --panel: #f7f8fa; --line: #bbc4cf; --text: #142033; --muted: #3b4c63; --accent: #07675d; } main { padding: 0; } .finding { break-inside: avoid; } }
+  </style>
+</head>
+<body><main>
+  <div class="eyebrow">SHENSEC / SECURITY AUDIT</div>
+  {% block content %}{% endblock %}
+  <footer>Configuration observations require context. Only completed checks can establish that a previously observed issue is resolved. JWT inspection does not verify signatures or server acceptance.</footer>
+</main></body>
+</html>

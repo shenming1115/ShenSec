@@ -1,0 +1,15 @@
+{
+  "openapi": "3.1.0",
+  "info": {"title": "Example authenticated API", "version": "1.0.0"},
+  "security": [{"bearerAuth": []}],
+  "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer"}}},
+  "paths": {
+    "/health": {"get": {"security": [], "responses": {"200": {"description": "Ready"}}}},
+    "/users/{user_id}": {
+      "parameters": [{"name": "user_id", "in": "path", "required": true, "schema": {"type": "string"}}],
+      "get": {"responses": {"200": {"description": "User details"}}},
+      "delete": {"responses": {"204": {"description": "Requires explicit request configuration"}}}
+    },
+    "/search": {"post": {"responses": {"200": {"description": "Configure a body variable manually"}}}}
+  }
+}

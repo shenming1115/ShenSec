@@ -167,3 +167,42 @@ def test_gui_export_formats(qapp, monkeypatch):
     window.export_md()
     assert "markdown" in written_format
 
+
+def test_gui_search_includes_recommendation_and_reapplies_filter(qapp):
+    from shensec.gui.main_window import MainWindow
+    from shensec.models import Finding, Severity
+    window = MainWindow()
+    findings = [
+        Finding(rule_id="A", title="First", description="Observation", severity=Severity.HIGH, recommendation="Rotate the signing key", evidence="Header absent"),
+        Finding(rule_id="B", title="Second", description="Observation", severity=Severity.LOW),
+    ]
+    window.search_input.setText("signing key")
+    window._populate_table(findings)
+    visible = [window.table.item(row, 1).text() for row in range(window.table.rowCount()) if not window.table.isRowHidden(row)]
+    assert visible == ["A"]
+    window.table.selectRow(0)
+    window.show_finding_details()
+    assert "Rotate the signing key" in window.finding_details.toPlainText()
+    assert "Header absent" in window.finding_details.toPlainText()
+
+
+def test_gui_jwt_has_summary_and_exportable_result(qapp):
+    from shensec.gui.main_window import MainWindow
+    from shensec.models import Finding, Severity
+    window = MainWindow()
+    window.on_jwt_finished([Finding(rule_id="JWT", title="Test", description="Observation", severity=Severity.CRITICAL)])
+    assert window.current_result.scan_kind == "jwt"
+    assert window.current_result.risk_rating == Severity.CRITICAL
+    assert "CRITICAL: 1" in window.lbl_counts.text()
+    assert window.btn_export_html.isEnabled()
+    assert window.btn_export_json.isEnabled()
+
+
+def test_gui_failed_scan_is_not_presented_as_clean(qapp):
+    from shensec.gui.main_window import MainWindow
+    from shensec.models import ScanResult
+    window = MainWindow()
+    window.on_scan_finished(ScanResult(target_url="https://test/", status_code=0, response_time_ms=1, error="Network failure"))
+    assert "ERROR" in window.lbl_risk.text()
+    assert "Network failure" in window.lbl_risk.toolTip()
+
