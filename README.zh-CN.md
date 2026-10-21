@@ -6,6 +6,14 @@
 
 [下载 Windows exe](https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64.exe) · [便携 ZIP（启动更快）](https://github.com/shenming1115/ShenSec/releases/download/v0.5.0b1/ShenSec-0.5.0b1-windows-x64-portable.zip) · [完整使用教程](docs/windows-guide.zh-CN.md)
 
+## 27 秒看懂真实操作
+
+[![真实 Windows 操作演示：自动登录、会话续期和多角色权限对比](docs/demo-workflow.gif)](docs/demo-workflow.gif)
+
+**双击 exe → 一键本地演示 → 自动登录 → 会话续期 → 多角色权限矩阵 → 历史基线对比。**
+
+使用已发布的 Windows exe 实际操作：**4 个角色 × 2 个接口、4 次会话续期、8/8 项权限预期通过、3 项异常授权已修复**。同一个 owner 访问管理员接口，从修复前的 HTTP 200 变为修复后的 HTTP 403。GIF 配有英文步骤字幕，缩短了等待时间并放大关键细节；演示使用内置本机靶场。[录制说明](docs/screenshots.md#real-windows-demo-gif)。
+
 0.5 新增：
 
 - **自动登录**：JSON／表单、CSRF、Cookie 或 Bearer 输出，必须通过身份断言验证成功。

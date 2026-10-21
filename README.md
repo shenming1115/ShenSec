@@ -12,6 +12,14 @@ An API security workbench with automatic login, session renewal, verified role c
 
 [简体中文](README.zh-CN.md) · [Windows tutorial](docs/windows-guide.zh-CN.md) · [Authentication guide](docs/authentication.md) · [CI integration](docs/ci.md)
 
+## See the real workflow in 27 seconds
+
+[![Real Windows walkthrough: automatic login, session renewal and multi-role permission comparison](docs/demo-workflow.gif)](docs/demo-workflow.gif)
+
+**Open the exe → try the local demo → automatic login → session renewal → compare roles → review baseline changes.**
+
+Captured from the published Windows exe: **4 roles × 2 endpoints, 4 session renewals, 8/8 permission expectations met, 3 unexpected grants fixed**. The same owner/admin check changes from HTTP 200 to HTTP 403 after hardening. Waiting time is shortened and details are enlarged; this is an edited walkthrough of the built-in local fixture. [Recording notes](docs/screenshots.md#real-windows-demo-gif).
+
 ## Download and double-click
 
 **Windows 10/11 x64 — no Python, uv, terminal or administrator rights required.**

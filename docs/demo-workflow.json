@@ -1,0 +1,116 @@
+{
+  "source": "Published ShenSec 0.5.0b1 Windows x64 exe; real Windows.Graphics.Capture frames",
+  "source_release": "https://github.com/shenming1115/ShenSec/releases/tag/v0.5.0b1",
+  "source_exe_sha256": "bd77f7fca62a87dc5064e2139ebff5e348055d7841b3c7dc688c4338a34f628a",
+  "recorded_on": "2026-10-21",
+  "edited": true,
+  "edits": [
+    "selected native window captures",
+    "waits condensed",
+    "application-area crop and detail zooms",
+    "explanatory captions below the captured UI"
+  ],
+  "fixture": "Synthetic credentials and loopback HTTP only; four roles, two endpoints.",
+  "gif": {
+    "width": 1180,
+    "height": 761,
+    "frames": 13,
+    "duration_ms": 27200,
+    "loop": 0,
+    "bytes": 1449263,
+    "sha256": "715a5b1496e40e2ee16f828d5821af8fb19f51ce114b5522f4216c3c421e04b6"
+  },
+  "scenes": [
+    {
+      "capture": "15-after-fix.jpg",
+      "captured_at": "2026-10-21T05:48:39.348Z",
+      "caption": "REAL DEMO: LOGIN → RENEW → COMPARE ROLES",
+      "duration_ms": 1800,
+      "source_frame_sha256": "681ff1fac69327a890f73257a5e0739600c0109dd925f868477372587001bdb3"
+    },
+    {
+      "capture": "01-open.jpg",
+      "captured_at": "2026-10-21T05:45:00.393Z",
+      "caption": "01  OPEN & TRY THE LOCAL DEMO",
+      "duration_ms": 1800,
+      "source_frame_sha256": "56b5e7d96d8532fca4c83089a031064da1bbeee271d5a79d29736401cc53cfd1"
+    },
+    {
+      "capture": "02-prepare.jpg",
+      "captured_at": "2026-10-21T05:45:19.361Z",
+      "caption": "01  ONE CLICK STARTS A REAL LOCAL APP",
+      "duration_ms": 800,
+      "source_frame_sha256": "a8f17e3a0305b2a6610cb80cb436d9bed72aae67c87fe95f0beffa5670fe7a18"
+    },
+    {
+      "capture": "04-auto-login.jpg",
+      "captured_at": "2026-10-21T05:46:02.665Z",
+      "caption": "02  CONFIGURE AUTOMATIC LOGIN",
+      "duration_ms": 2600,
+      "source_frame_sha256": "056079b5e1be26fe34eab3e417eca3b794f0097ce731b820cb4d201c8cdb2891"
+    },
+    {
+      "capture": "05-refresh-config.jpg",
+      "captured_at": "2026-10-21T05:46:47.702Z",
+      "caption": "02  KEEP THE SESSION VALID",
+      "duration_ms": 2400,
+      "source_frame_sha256": "0c3bfa374efe697c46500262361cd2a32296b04fb9c2f8f742507605bd0c71b1"
+    },
+    {
+      "capture": "06-ready-to-run.jpg",
+      "captured_at": "2026-10-21T05:46:54.681Z",
+      "caption": "03  START THE AUDIT",
+      "duration_ms": 900,
+      "source_frame_sha256": "c17910874f7780fe47448dccc2b05ea4a1003021d2d666f8c9c6f43de638720b"
+    },
+    {
+      "capture": "07-signing-in.jpg",
+      "captured_at": "2026-10-21T05:47:00.308Z",
+      "caption": "03  AUTOMATIC LOGIN IN PROGRESS",
+      "duration_ms": 900,
+      "source_frame_sha256": "d979f1a036a31374becade1ab4e62f0545732d8a63a0c36172f729cc039d2204"
+    },
+    {
+      "capture": "08-progress-1.jpg",
+      "captured_at": "2026-10-21T05:47:16.068Z",
+      "caption": "03  THE REAL AUDIT IS COMPLETE",
+      "duration_ms": 1400,
+      "source_frame_sha256": "4f131b54a8229b0e2d70a69db55ebcf60e123d8c4bfe3fbe57d590142b6bf630"
+    },
+    {
+      "capture": "12-sessions.jpg",
+      "captured_at": "2026-10-21T05:47:43.240Z",
+      "caption": "04  INSPECT AUTOMATIC SESSION RENEWAL",
+      "duration_ms": 3400,
+      "source_frame_sha256": "42a974a07b7b63d59e9138317986aa3c87278c79b67881b955ca11794017008b"
+    },
+    {
+      "capture": "13-before-fix.jpg",
+      "captured_at": "2026-10-21T05:48:01.226Z",
+      "caption": "05  COMPARE ROLES: BEFORE THE FIX",
+      "duration_ms": 2600,
+      "source_frame_sha256": "2a5062b96b6103307b7943263b2d726d6e975e91d630903a1f940917648b3391"
+    },
+    {
+      "capture": "14-unexpected-allow.jpg",
+      "captured_at": "2026-10-21T05:48:28.390Z",
+      "caption": "05  READ THE ACCESS-CONTROL EVIDENCE",
+      "duration_ms": 2700,
+      "source_frame_sha256": "51070584550a332d00566a629766ea8bdeca645c224a9e829cb300352cd3f08e"
+    },
+    {
+      "capture": "15-after-fix.jpg",
+      "captured_at": "2026-10-21T05:48:39.348Z",
+      "caption": "06  CONFIRM THE FIX AGAINST THE BASELINE",
+      "duration_ms": 2900,
+      "source_frame_sha256": "681ff1fac69327a890f73257a5e0739600c0109dd925f868477372587001bdb3"
+    },
+    {
+      "capture": "16-verified-deny.jpg",
+      "captured_at": "2026-10-21T05:48:44.771Z",
+      "caption": "06  VERIFIED: HTTP 200 BECOMES HTTP 403",
+      "duration_ms": 3000,
+      "source_frame_sha256": "e5b7819a03450af90d657915dfad9c976c541d4b9e8eda77cdd15c757dc43814"
+    }
+  ]
+}
